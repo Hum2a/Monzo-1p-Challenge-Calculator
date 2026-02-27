@@ -1,0 +1,10 @@
+# Wrangler local dev secrets
+# Copy to .dev.vars and fill in for `npm run preview` (Cloudflare Workers runtime locally)
+# .dev.vars is gitignored – never commit real secrets
+
+AUTH_SECRET=your-secret-here
+AUTH_URL=http://localhost:8787
+DATABASE_URL=postgresql://user:pass@host-pooler.region.aws.neon.tech/dbname?sslmode=require
+DIRECT_URL=postgresql://user:pass@host.region.aws.neon.tech/dbname?sslmode=require
+AUTH_RESEND_KEY=re_xxxxxxxxxxxx
+AUTH_RESEND_FROM=1p Challenge <onboarding@resend.dev>
