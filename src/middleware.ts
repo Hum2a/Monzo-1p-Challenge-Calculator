@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
 
-export default auth((req) => {
+export default auth(() => {
   const response = NextResponse.next();
 
   // Security headers

@@ -24,8 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { DailyBreakdown } from "@/components/DailyBreakdown";
-import { Copy, Share2, Save, FolderOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Copy, Share2, Save } from "lucide-react";
 
 type Mode = "next-n" | "month" | "custom";
 
@@ -82,7 +81,7 @@ export function Calculator() {
   const [copyStatus, setCopyStatus] = React.useState<"idle" | "copied">("idle");
   const [saveStatus, setSaveStatus] = React.useState<"idle" | "saving" | "saved" | "error">("idle");
   const [savedStates, setSavedStates] = React.useState<Array<{ id: string; name: string | null; state: ShareParams; updatedAt: string }>>([]);
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session } = useSession();
 
   // Hydrate from URL or localStorage
   React.useEffect(() => {
