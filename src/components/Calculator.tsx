@@ -78,6 +78,7 @@ export function Calculator() {
   const [showBreakdown, setShowBreakdown] = React.useState(false);
   const [showPenceOnly, setShowPenceOnly] = React.useState(false);
   const [firstDayOffset, setFirstDayOffset] = React.useState<number | null>(null); // "I'm on day X"
+  const [dayInputStr, setDayInputStr] = React.useState("1"); // local display for day input (allows empty while typing)
   const [copyStatus, setCopyStatus] = React.useState<"idle" | "copied">("idle");
   const [saveStatus, setSaveStatus] = React.useState<"idle" | "saving" | "saved" | "error">("idle");
   const [savedStates, setSavedStates] = React.useState<Array<{ id: string; name: string | null; state: ShareParams; updatedAt: string }>>([]);
@@ -103,6 +104,11 @@ export function Calculator() {
     if (merged.firstDayOffset != null) setFirstDayOffset(merged.firstDayOffset);
   }, []);
 
+  // Sync day input display when firstDayOffset is set externally (URL, load)
+  React.useEffect(() => {
+    if (firstDayOffset != null) setDayInputStr(String(firstDayOffset));
+  }, [firstDayOffset]);
+
   const config: ChallengeConfig = React.useMemo(
     () => ({
       startDate: new Date(challengeStart),
@@ -112,13 +118,17 @@ export function Calculator() {
     [challengeStart, challengeLength, basePence]
   );
 
+  const effectiveDayOffset = firstDayOffset != null
+    ? (dayInputStr === "" ? 1 : Math.max(1, Math.min(365, Number(dayInputStr) || 1)))
+    : null;
+
   const result: RangeResult | null = React.useMemo(() => {
     if (mode === "next-n") {
       // Advanced: "I'm on day X" - use day numbers directly
-      if (firstDayOffset != null && firstDayOffset >= 1) {
+      if (effectiveDayOffset != null && effectiveDayOffset >= 1) {
         return computeRange(
-          firstDayOffset,
-          Math.min(firstDayOffset + n - 1, config.challengeLengthDays),
+          effectiveDayOffset,
+          Math.min(effectiveDayOffset + n - 1, config.challengeLengthDays),
           basePence
         );
       }
@@ -132,7 +142,7 @@ export function Calculator() {
       new Date(customEnd),
       config
     );
-  }, [mode, n, fromDate, month, year, customStart, customEnd, config, firstDayOffset, basePence]);
+  }, [mode, n, fromDate, month, year, customStart, customEnd, config, effectiveDayOffset, basePence]);
 
   const shareParams: ShareParams = React.useMemo(
     () => ({
@@ -145,9 +155,9 @@ export function Calculator() {
       challengeStart,
       challengeLength,
       basePence,
-      firstDayOffset: firstDayOffset ?? undefined,
+      firstDayOffset: effectiveDayOffset ?? undefined,
     }),
-    [mode, n, fromDate, month, year, customStart, customEnd, challengeStart, challengeLength, basePence, firstDayOffset]
+    [mode, n, fromDate, month, year, customStart, customEnd, challengeStart, challengeLength, basePence, effectiveDayOffset]
   );
 
   React.useEffect(() => {
@@ -231,7 +241,7 @@ export function Calculator() {
   };
 
   const interpretation = result ? getInterpretation(mode, result, {
-    n, fromDate, month, year, customStart, customEnd, showPenceOnly, firstDayOffset,
+    n, fromDate, month, year, customStart, customEnd, showPenceOnly, firstDayOffset: effectiveDayOffset,
   }) : null;
 
   const formulaExplanation = result
@@ -288,9 +298,11 @@ export function Calculator() {
                 <input
                   type="checkbox"
                   checked={firstDayOffset != null}
-                  onChange={(e) =>
-                    setFirstDayOffset(e.target.checked ? 1 : null)
-                  }
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setFirstDayOffset(checked ? 1 : null);
+                    if (checked) setDayInputStr("1");
+                  }}
                   className="rounded border-input"
                   aria-label="I'm on a specific day number"
                 />
@@ -303,10 +315,13 @@ export function Calculator() {
                     type="number"
                     min={1}
                     max={365}
-                    value={firstDayOffset}
-                    onChange={(e) =>
-                      setFirstDayOffset(Math.max(1, Number(e.target.value) || 1))
-                    }
+                    value={dayInputStr}
+                    onChange={(e) => setDayInputStr(e.target.value)}
+                    onBlur={() => {
+                      const parsed = dayInputStr === "" ? 1 : Math.max(1, Math.min(365, Number(dayInputStr) || 1));
+                      setFirstDayOffset(parsed);
+                      setDayInputStr(String(parsed));
+                    }}
                     className="mt-1"
                     aria-label="Current day number in challenge"
                   />
