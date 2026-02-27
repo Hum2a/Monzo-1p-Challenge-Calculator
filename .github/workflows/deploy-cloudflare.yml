@@ -46,3 +46,21 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
           workingDirectory: .
+
+      - name: Upload secrets to Worker (runtime env)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_URL: ${{ secrets.AUTH_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
+          AUTH_RESEND_FROM: ${{ secrets.AUTH_RESEND_FROM }}
+        run: |
+          printf '%s' "$AUTH_SECRET" | npx wrangler secret put AUTH_SECRET
+          printf '%s' "$AUTH_URL" | npx wrangler secret put AUTH_URL
+          printf '%s' "$DATABASE_URL" | npx wrangler secret put DATABASE_URL
+          printf '%s' "$DIRECT_URL" | npx wrangler secret put DIRECT_URL
+          printf '%s' "$AUTH_RESEND_KEY" | npx wrangler secret put AUTH_RESEND_KEY
+          printf '%s' "$AUTH_RESEND_FROM" | npx wrangler secret put AUTH_RESEND_FROM

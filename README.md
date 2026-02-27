@@ -137,6 +137,14 @@ This error means the repo is connected to **Cloudflare Pages**, not Workers. Pag
 6. Add build variables (secrets) for `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
 7. Save. You can delete or ignore the old Pages project.
 
+#### Troubleshooting: "Application error" when sending magic link
+
+The Worker needs runtime secrets (AUTH_SECRET, AUTH_URL, DATABASE_URL, DIRECT_URL, AUTH_RESEND_KEY, AUTH_RESEND_FROM). If they are missing, auth will fail.
+
+- **GitHub Actions:** The workflow now uploads secrets after deploy. Ensure all 6 vars are set in repo Settings → Secrets and variables → Actions. `AUTH_URL` must match your Worker URL (e.g. `https://monzo-1p-challenge-calculator.humzab1711.workers.dev`).
+- **Cloudflare Workers Build (connect Git):** Add secrets in the dashboard: Workers & Pages → your Worker → Settings → Variables and Secrets → Add variable (encrypted).
+- **Manual deploy:** Run `npm run deploy:prod` (loads `.dev.vars.production` and uploads secrets) or set them once: `npx wrangler secret put AUTH_SECRET`, etc.
+
 ## Scripts
 
 | Command | Description |
