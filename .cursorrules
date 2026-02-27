@@ -1,0 +1,12 @@
+You are working in a production Next.js (App Router) TypeScript codebase.
+
+Rules:
+- Use TypeScript everywhere; no implicit any.
+- Currency math must use integer pence (number) only. Never store money as float.
+- All external input must be validated with Zod (query params, form inputs, localStorage reads).
+- Keep business logic in /src/lib and write unit tests for it.
+- UI components must be accessible (labels, aria where needed) and mobile-first.
+- Prefer small, composable components. Avoid large files.
+- Never introduce secrets into client code. Use env vars and document them in .env.example.
+- Do not add new libraries without stating why and updating README.
+- When asked to change a feature, update tests accordingly.
