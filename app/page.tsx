@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Calculator } from "@/components/Calculator";
+import { AuthButton } from "@/components/AuthButton";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -18,7 +19,8 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <nav className="flex gap-2">
+          <nav className="flex items-center gap-2 flex-wrap">
+            <AuthButton />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/about">About</Link>
             </Button>
