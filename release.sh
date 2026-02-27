@@ -27,7 +27,7 @@ show_help() {
   echo "  --set-tag TAG     Set specific tag (must be vX.Y.Z format)"
   echo "  --current         Show current release tag"
   echo "  --force           Force tag creation even if commit is tagged"
-  echo "  --no-changelog    Skip updating CHANGELOG.md (smart categorization)"
+  echo "  --no-changelog    Skip updating CHANGELOG.md (intelligent changelog lines)"
   echo "  --help            Show this help message"
   echo ""
   echo "Examples:"
@@ -43,8 +43,8 @@ show_help() {
 update_changelog() {
   local new_tag="$1"
 
-  echo "🚀 Updating CHANGELOG.md with smart categorization..."
-  echo "This will analyze commits and create a beautiful, categorized changelog entry."
+  echo "🚀 Updating CHANGELOG.md with intelligent changelog lines..."
+  echo "This will analyze commits and create concise, user-friendly changelog entries."
   echo ""
 
   # Ensure we have the latest tags from remote before updating changelog
@@ -111,10 +111,10 @@ update_changelog() {
 
   if [[ $? -eq 0 ]]; then
     echo ""
-    echo "✅ CHANGELOG.md updated successfully with smart categorization!"
+    echo "✅ CHANGELOG.md updated successfully!"
     echo "   - New release section added: [$new_tag]"
     echo "   - Unreleased section reset for future changes"
-    echo "   - Commits automatically categorized into meaningful sections"
+    echo "   - Commit messages transformed into concise, readable changelog lines"
   else
     echo "❌ Failed to update CHANGELOG.md"
     exit 1
@@ -386,10 +386,10 @@ if [[ $TAG_EXIT -eq 0 ]]; then
 
     if [[ "$UPDATE_CHANGELOG" == true ]]; then
       echo ""
-      echo "📋 Smart Changelog System:"
-      echo "   ✅ CHANGELOG.md has been updated with smart categorization"
-      echo "   ✅ Commits automatically sorted into meaningful sections"
-      echo "   ✅ Professional formatting with clear structure"
+      echo "📋 Changelog:"
+      echo "   ✅ Commit messages transformed into concise, user-friendly lines"
+      echo "   ✅ Dependency bumps merged; verbose text shortened"
+      echo "   ✅ Entries categorized (Added, Fixed, Documentation, etc.)"
     fi
 
     echo ""

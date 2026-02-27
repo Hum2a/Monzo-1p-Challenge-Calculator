@@ -2,6 +2,7 @@
 """
 Smart CHANGELOG.md updater for Node.js projects.
 Analyzes commits since last tag and creates categorized changelog entries.
+Transforms raw commit messages into concise, user-friendly changelog lines.
 Uses Conventional Commits format for categorization.
 """
 
@@ -9,6 +10,31 @@ import subprocess
 import sys
 import re
 from datetime import datetime
+from collections import defaultdict
+
+# Max length for a changelog line (soft limit)
+MAX_LINE_LENGTH = 80
+
+# Phrases to strip from descriptions (verbose filler)
+VERBOSE_PHRASES = [
+    r"\s*\.\s*This\s+change\s+ensures?\s+[^.]*\.?",
+    r"\s*\.\s*This\s+update\s+[^.]*\.?",
+    r"\s*,\s*ensuring\s+[^.]*\.?",
+    r"\s*,\s*enhancing\s+[^.]*\.?",
+    r"\s*,\s*improving\s+[^.]*\.?",
+    r"\s*,\s*promoting\s+[^.]*\.?",
+    r"\s*,\s*maintaining\s+[^.]*\.?",
+    r"\s*,\s*establishing\s+[^.]*\.?",
+    r"\s+for\s+improved\s+[^.]*\.?",
+    r"\s+for\s+better\s+[^.]*\.?",
+    r"\s+for\s+enhanced\s+[^.]*\.?",
+    r"\s+for\s+consistent\s+[^.]*\.?",
+    r"\s+to\s+ensure\s+[^.]*\.?",
+    r"\s+to\s+improve\s+[^.]*\.?",
+    r"\s+to\s+enhance\s+[^.]*\.?",
+    r"\s+addressing\s+[^.]*\.?",
+    r"\s+enhancing\s+[^.]*\.?",
+]
 
 
 def run_git(*args):
@@ -77,6 +103,93 @@ def categorize_commit(msg):
     return "Other", msg
 
 
+def transform_to_changelog_line(desc):
+    """
+    Transform a raw commit description into a concise, user-friendly changelog line.
+    """
+    if not desc or not desc.strip():
+        return None
+
+    s = desc.strip()
+
+    # Skip init/empty
+    if re.match(r"^init\.?$", s, re.I):
+        return None
+
+    # Skip version bump / chore commits that add no user value
+    if re.match(r"^(chore|bump):\s+", s, re.I) and "version" in s.lower():
+        return None
+
+    # Dependency bumps: "Bump X from A to B" -> "Update X to B" or group later
+    bump_match = re.match(r"^bump\s+([\w@/-]+)\s+from\s+[\w.+-]+\s+to\s+([\w.+-]+)", s, re.I)
+    if bump_match:
+        pkg, ver = bump_match.groups()
+        return ("_bump", f"Update {pkg} to {ver}")
+
+    # Remove verbose filler phrases first (before shortening)
+    for phrase in VERBOSE_PHRASES:
+        s = re.sub(phrase, "", s, flags=re.IGNORECASE)
+
+    # Take first sentence only
+    s = re.split(r"[.!?]\s+", s)[0].strip()
+    if not s:
+        return None
+
+    # "Add X. This template includes Y" -> "Add X"
+    s = re.sub(r"\.\s+This\s+\w+\s+(includes?|provides?|adds?|ensures?)\s+.*$", "", s, flags=re.I)
+
+    # Simplify common patterns
+    if re.match(r"^add\s+", s, re.I):
+        s = re.sub(r"^add\s+", "", s, flags=re.I)
+        s = re.sub(r"\s+to\s+.*$", "", s, flags=re.I)
+        s = re.sub(r"\s+for\s+.*$", "", s, flags=re.I)
+        s = "Add " + s
+    elif re.match(r"^update\s+", s, re.I):
+        s = re.sub(r"^update\s+", "", s, flags=re.I)
+        s = re.sub(r"^(\S+\.\w+)\s+to\s+", r"\1: ", s, flags=re.I)
+        s = re.sub(r"^(\S+\.\w+)\s+with\s+", r"\1: ", s, flags=re.I)
+        s = "Update " + s
+    elif re.match(r"^enhance\s+", s, re.I):
+        s = re.sub(r"^enhance\s+", "", s, flags=re.I)
+        s = "Improve " + s
+
+    # Truncate at natural break if too long
+    if len(s) > MAX_LINE_LENGTH:
+        cut = s[:MAX_LINE_LENGTH].rfind(" ")
+        s = s[:cut] + "..." if cut > 40 else s[:MAX_LINE_LENGTH - 3] + "..."
+
+    # Capitalize
+    s = s[0].upper() + s[1:] if len(s) > 1 else s.upper()
+    return s
+
+
+def merge_similar(items):
+    """
+    Merge similar items (e.g. dependency bumps) into single concise entries.
+    """
+    bumps = []
+    rest = []
+    for item in items:
+        if isinstance(item, tuple) and item[0] == "_bump":
+            bumps.append(item[1])
+        elif item and isinstance(item, str):
+            rest.append(item)
+
+    result = []
+    if bumps:
+        if len(bumps) <= 3:
+            result.extend(bumps)
+        else:
+            # Extract package names for readability: "Update X to Y" -> X
+            pkgs = []
+            for b in bumps:
+                m = re.search(r"Update\s+([\w@/-]+)\s+to\s+", b, re.I)
+                pkgs.append(m.group(1) if m else "deps")
+            result.append(f"Update dependencies ({', '.join(pkgs[:5])}{'…' if len(pkgs) > 5 else ''})")
+    result.extend(rest)
+    return result
+
+
 def update_changelog(new_tag):
     """Update CHANGELOG.md with new release section."""
     # Ensure tag has v prefix for display
@@ -92,14 +205,24 @@ def update_changelog(new_tag):
         if c and not c.startswith("Merge ") and not c.startswith("merge ")
     ]
 
-    # Categorize commits
-    categories = {}
+    # Categorize and transform commits into intelligent changelog lines
+    categories = defaultdict(list)
+    seen = set()
     for msg in commits:
         cat, desc = categorize_commit(msg)
-        if cat not in categories:
-            categories[cat] = []
-        if desc and desc not in [d for d in categories[cat]]:
-            categories[cat].append(desc)
+        transformed = transform_to_changelog_line(desc)
+        if transformed is None:
+            continue
+        # Deduplicate by normalized form (lowercase, no extra spaces)
+        key = (transformed.lower() if isinstance(transformed, str) else transformed[1].lower()).replace(" ", "")
+        if key in seen:
+            continue
+        seen.add(key)
+        categories[cat].append(transformed)
+
+    # Merge similar items (e.g. dependency bumps) per category
+    for cat in categories:
+        categories[cat] = merge_similar(categories[cat])
 
     # Build new changelog section
     today = datetime.now().strftime("%Y-%m-%d")
@@ -113,8 +236,10 @@ def update_changelog(new_tag):
             lines.append(f"### {cat}")
             lines.append("")
             for item in categories[cat]:
+                if isinstance(item, tuple):
+                    item = item[1]
                 # Capitalize first letter
-                item = item[0].upper() + item[1:] if item else item
+                item = item[0].upper() + item[1:] if item and len(item) > 1 else (item.upper() if item else item)
                 lines.append(f"- {item}")
             lines.append("")
 
