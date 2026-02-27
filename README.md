@@ -7,13 +7,24 @@ A production-ready web app for the **1p Accumulator / Penny Challenge** savings 
 ```bash
 npm install
 cp .env.example .env.local
-# Edit .env.local with your values
+cp .dev.vars.example .dev.vars
+# Edit .env.local and .dev.vars with your values
 npm run db:generate
 npm run db:push
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### Local Cloudflare preview
+
+To run the app in the Cloudflare Workers runtime locally (closer to production):
+
+```bash
+npm run preview
+```
+
+Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 
 ## Production Stack
 
@@ -63,18 +74,28 @@ Open [http://localhost:3000](http://localhost:3000).
    - `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
 3. Push to `main` – the workflow deploys automatically.
 
-### Option B: Local deploy (WSL or Mac/Linux)
+### Option B: Deploy from terminal (WSL or Mac/Linux)
 
-1. Create a Neon project and get `DATABASE_URL` + `DIRECT_URL`.
-2. Create a Resend account, verify domain, get API key.
-3. In Cloudflare Workers Build:
-   - Build command: `npm run build:cf`
-   - Output: `.open-next`
-   - Set env vars: `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`
-4. Deploy:
+1. Set secrets in Cloudflare once (one-time setup):
    ```bash
-   npm run deploy
+   npx wrangler secret put AUTH_SECRET
+   npx wrangler secret put AUTH_URL
+   npx wrangler secret put DATABASE_URL
+   npx wrangler secret put DIRECT_URL
+   npx wrangler secret put AUTH_RESEND_KEY
+   npx wrangler secret put AUTH_RESEND_FROM
    ```
+2. Ensure `.env.local` has values for the build.
+3. Run `npm run deploy`.
+
+*(Windows can fail on deploy—use WSL or GitHub Actions.)*
+
+### Option C: Cloudflare Workers Build (connect Git)
+
+1. Workers & Pages → Create → Connect to Git.
+2. Build command: `npm run build:cf`; Root: project root.
+3. Add env vars in Build variables: `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
+4. Push to trigger deploy. Cloudflare builds on Linux (avoids Windows issues).
    Or connect GitHub to Workers Build for CI/CD.
 
 ## Cursor Rules
