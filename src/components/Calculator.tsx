@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSession } from "next-auth/react";
 import { format, addDays } from "date-fns";
 import {
   computeNextNDays,
@@ -23,7 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { DailyBreakdown } from "@/components/DailyBreakdown";
-import { Copy, Share2 } from "lucide-react";
+import { Copy, Share2, Save, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Mode = "next-n" | "month" | "custom";
@@ -79,6 +80,9 @@ export function Calculator() {
   const [showPenceOnly, setShowPenceOnly] = React.useState(false);
   const [firstDayOffset, setFirstDayOffset] = React.useState<number | null>(null); // "I'm on day X"
   const [copyStatus, setCopyStatus] = React.useState<"idle" | "copied">("idle");
+  const [saveStatus, setSaveStatus] = React.useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [savedStates, setSavedStates] = React.useState<Array<{ id: string; name: string | null; state: ShareParams; updatedAt: string }>>([]);
+  const { data: session, status: sessionStatus } = useSession();
 
   // Hydrate from URL or localStorage
   React.useEffect(() => {
@@ -150,6 +154,54 @@ export function Calculator() {
   React.useEffect(() => {
     saveToStorage(shareParams);
   }, [shareParams]);
+
+  React.useEffect(() => {
+    if (session?.user) {
+      fetch("/api/saved")
+        .then((r) => r.ok && r.json())
+        .then((data) => data?.states && setSavedStates(data.states))
+        .catch(() => {});
+    } else {
+      setSavedStates([]);
+    }
+  }, [session?.user]);
+
+  const handleSave = async () => {
+    if (!session?.user) return;
+    setSaveStatus("saving");
+    try {
+      const res = await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: shareParams }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setSaveStatus("saved");
+      const data = await res.json();
+      setSavedStates((prev) => {
+        const updated = prev.filter((s) => s.name !== (data.name ?? "Default"));
+        return [{ id: data.id, name: data.name ?? "Default", state: shareParams, updatedAt: new Date().toISOString() }, ...updated];
+      });
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    } catch {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    }
+  };
+
+  const handleLoad = (s: { state: ShareParams }) => {
+    const st = s.state as ShareParams;
+    if (st.mode) setMode(st.mode as Mode);
+    if (st.n != null) setN(st.n);
+    if (st.month != null) setMonth(st.month);
+    if (st.year != null) setYear(st.year);
+    if (st.start) { setFromDate(st.start); setCustomStart(st.start); }
+    if (st.end) setCustomEnd(st.end);
+    if (st.challengeStart) setChallengeStart(st.challengeStart);
+    if (st.challengeLength != null) setChallengeLength(st.challengeLength);
+    if (st.basePence != null) setBasePence(st.basePence);
+    setFirstDayOffset(st.firstDayOffset ?? null);
+  };
 
   const shareUrl = typeof window !== "undefined"
     ? `${window.location.origin}${window.location.pathname}?${new URLSearchParams(
@@ -420,6 +472,37 @@ export function Calculator() {
         )}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
+        {session?.user && (
+          <>
+            <Button
+              variant="outline"
+              onClick={handleSave}
+              disabled={saveStatus === "saving"}
+              aria-label="Save to account"
+            >
+              <Save className="size-4" />
+              {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save to account"}
+            </Button>
+            {savedStates.length > 0 && (
+              <select
+                className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                onChange={(e) => {
+                  const id = e.target.value;
+                  const s = savedStates.find((x) => x.id === id);
+                  if (s) handleLoad(s);
+                }}
+                aria-label="Load saved state"
+              >
+                <option value="">Load saved...</option>
+                {savedStates.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name ?? "Default"} ({format(new Date(s.updatedAt), "d MMM")})
+                  </option>
+                ))}
+              </select>
+            )}
+          </>
+        )}
         <Button
           variant="default"
           onClick={handleCopy}
