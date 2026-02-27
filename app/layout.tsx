@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -13,7 +14,6 @@ export const metadata: Metadata = {
     "Plan your penny accumulator savings with Monzo. Calculate deposits for any date range, month, or custom period. Mobile-friendly savings calculator.",
   manifest: "/manifest.json",
   icons: { icon: "/icon-192.png", apple: "/icon-192.png" },
-  themeColor: "#FE4B60",
   openGraph: {
     title: "1p Challenge Calculator | Monzo",
     description:
@@ -21,6 +21,8 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+
+export const viewport = { themeColor: "#FE4B60" };
 
 export default function RootLayout({
   children,
@@ -30,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${plusJakarta.variable} antialiased min-h-screen`}>
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );
