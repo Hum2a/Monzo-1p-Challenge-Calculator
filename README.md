@@ -121,7 +121,7 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 4. **Build variables:** Add `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
 5. Push to trigger deploy. Cloudflare builds on Linux (avoids Windows issues).
 
-**If you used Pages by mistake:** Pages uses the deprecated `@cloudflare/next-on-pages` adapter. Set **Framework preset** to **None** and use the build command above. Or create a **Worker** project instead.
+**If you used Pages by mistake:** Cloudflare **Pages** expects `pages_build_output_dir` and uses the deprecated `@cloudflare/next-on-pages` adapter. This project uses **Workers** (OpenNext). Create a new **Worker** project: Workers & Pages → Workers → Create → Connect to Git. Use the build command above.
 
 ## Scripts
 
