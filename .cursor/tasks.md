@@ -1,26 +1,26 @@
 # Build Checklist
 
 ## Core
-- [ ] Next N days mode
-- [ ] Month mode
-- [ ] Custom range mode
-- [ ] Toggle daily breakdown (virtualized if needed)
-- [ ] Copy & Share link
-- [ ] Explanation accordion (formula + values)
+- [x] Next N days mode
+- [x] Month mode
+- [x] Custom range mode
+- [x] Toggle daily breakdown (scrollable list)
+- [x] Copy & Share link
+- [x] Explanation accordion (formula + values)
 
 ## Quality
-- [ ] Zod validation for all inputs
-- [ ] Integer pence only
-- [ ] Unit tests for math
-- [ ] Playwright smoke test
-- [ ] PWA manifest + icons
-- [ ] SEO + OG tags
+- [x] Zod validation for all inputs
+- [x] Integer pence only
+- [x] Unit tests for math
+- [x] Playwright smoke test
+- [x] PWA manifest + icons
+- [x] SEO + OG tags
 
 ## Security
-- [ ] Security headers
-- [ ] No secrets in client
-- [ ] Rate limit any API routes
+- [x] Security headers
+- [x] No secrets in client
+- [x] Rate limit any API routes (N/A - no API routes)
 
 ## Docs
-- [ ] README setup + deploy + math
-- [ ] .env.example
+- [x] README setup + deploy + math
+- [x] .env.example

@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 1p Challenge Calculator
 
-## Getting Started
+A production-ready web app for the **1p Accumulator / Penny Challenge** savings plan. Calculate how much to deposit for any date range, month, or custom period—with mobile-first design and shareable links.
 
-First, run the development server:
+## Setup
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How the Math Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The penny challenge uses a simple arithmetic series:
 
-## Learn More
+- **Day 1** = 1p  
+- **Day k** = k pence  
 
-To learn more about Next.js, take a look at the following resources:
+**Total for days a to b (inclusive):**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+$$\text{Sum} = \frac{b(b+1) - (a-1)a}{2} \text{ pence}$$
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Example: Days 60–90 = 60 + 61 + … + 90 = **2,325p** (£23.25).
 
-## Deploy on Vercel
+**Full challenge totals:**
+- **364 days:** £664.30  
+- **365 days:** £667.95  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+All calculations use **integer pence** end-to-end—no floats.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Features
+
+- **3 modes:** Next N days, Month, Custom range  
+- **Challenge config:** Start date (default Jan 1), length (364 or 365 days)  
+- **Daily breakdown:** Toggle to see each day’s amount  
+- **Currency:** GBP or pence-only display  
+- **Advanced:** "I'm on day X" for mid-challenge planning  
+- **Copy result** & **Share link** (URL encodes params)  
+- **PWA:** Installable on mobile  
+- **localStorage:** Persists settings (no account required)  
+
+## Project Structure
+
+```
+src/
+├── app/           # Next.js App Router pages
+├── components/    # UI components (Calculator, DailyBreakdown, ui/*)
+├── lib/
+│   ├── pennyChallenge.ts   # Pure math (tested)
+│   ├── validation.ts       # Zod schemas for inputs
+│   └── utils.ts            # cn() etc.
+```
+
+## Testing
+
+```bash
+# Unit tests (Vitest)
+npm run test
+
+# E2E (Playwright)
+npm run test:e2e
+
+# If dev server already running (avoids lock conflict):
+# E2E_SKIP_SERVER=1 npm run test:e2e
+```
+
+## Deployment (Vercel)
+
+1. Push to GitHub and import the repo in Vercel.  
+2. Deploy. No extra env vars needed for the basic app.  
+3. Optional: Add `NEXT_PUBLIC_ANALYTICS_ID` if you enable analytics.  
+
+For DB/Auth (phase 2):
+- Set `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DATABASE_URL`
+- Use secure cookies; see Auth.js docs.
+
+## Security Notes
+
+- **Input validation:** All query params and form inputs validated with Zod.  
+- **Integer pence:** No float money math.  
+- **Headers:** CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy.  
+- **Secrets:** Never logged or exposed to the client.  
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run start` | Run production server |
+| `npm run test` | Run unit tests |
+| `npm run test:e2e` | Run Playwright E2E tests |
+
+## License
+
+MIT
