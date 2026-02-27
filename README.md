@@ -2,8 +2,8 @@
 
 # 1p Challenge Calculator
 
-[![CI](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/ci.yml)
-[![Deploy](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml)
+[![CI](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/ci.yml)
+[![Deploy](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers-orange?logo=cloudflare)](https://workers.cloudflare.com/)
@@ -205,5 +205,3 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 [MIT](LICENSE)
 
 ---
-
-<sub>Replace `GITHUB_OWNER` in the badge URLs above with your GitHub username.</sub>
