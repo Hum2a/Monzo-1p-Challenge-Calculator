@@ -249,7 +249,7 @@ export function Calculator() {
     : null;
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
+    <Card className="w-full max-w-lg mx-auto animate-fade-in-scale opacity-0 shadow-sm hover:shadow-md">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl text-foreground">1p Challenge Calculator</CardTitle>
         <CardDescription>
@@ -258,7 +258,7 @@ export function Calculator() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Challenge config - collapsible or inline */}
-        <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+        <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 transition-colors duration-200">
           <p className="text-sm font-medium text-foreground">Challenge settings</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block text-sm">
@@ -273,7 +273,7 @@ export function Calculator() {
             <label className="block text-sm">
               <span className="sr-only">Challenge length</span>
               <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors duration-200"
                 value={challengeLength}
                 onChange={(e) => setChallengeLength(Number(e.target.value))}
                 aria-label="Challenge length in days"
@@ -285,7 +285,7 @@ export function Calculator() {
           </div>
         </div>
 
-        <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)} className="w-full">
+        <Tabs value={mode} onValueChange={(v: string) => setMode(v as Mode)} className="w-full">
           <TabsList className="grid w-full grid-cols-3" aria-label="Calculation mode">
             <TabsTrigger value="next-n" id="tab-next-n">Next N days</TabsTrigger>
             <TabsTrigger value="month" id="tab-month">Month</TabsTrigger>
@@ -298,12 +298,12 @@ export function Calculator() {
                 <input
                   type="checkbox"
                   checked={firstDayOffset != null}
+                  className="rounded border-input transition-all duration-200"
                   onChange={(e) => {
                     const checked = e.target.checked;
                     setFirstDayOffset(checked ? 1 : null);
                     if (checked) setDayInputStr("1");
                   }}
-                  className="rounded border-input"
                   aria-label="I'm on a specific day number"
                 />
                 <span className="text-sm">I&apos;m on day number...</span>
@@ -358,7 +358,7 @@ export function Calculator() {
               <label className="block">
                 <span className="text-sm font-medium">Month</span>
                 <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 transition-colors duration-200"
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
                   aria-label="Month"
@@ -418,7 +418,7 @@ export function Calculator() {
               type="checkbox"
               checked={showBreakdown}
               onChange={(e) => setShowBreakdown(e.target.checked)}
-              className="rounded border-input"
+              className="rounded border-input transition-all duration-200"
               aria-label="Show daily breakdown"
             />
             <span className="text-sm">Show daily breakdown</span>
@@ -428,7 +428,7 @@ export function Calculator() {
               type="checkbox"
               checked={showPenceOnly}
               onChange={(e) => setShowPenceOnly(e.target.checked)}
-              className="rounded border-input"
+              className="rounded border-input transition-all duration-200"
               aria-label="Show amounts in pence only"
             />
             <span className="text-sm">Pence only</span>
@@ -437,7 +437,7 @@ export function Calculator() {
 
         {/* Result */}
         {result ? (
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3 animate-fade-in-up transition-colors duration-200">
             <p className="text-2xl font-bold tabular-nums text-primary" aria-live="polite">
               {showPenceOnly ? `${result.totalPence}p` : formatPenceAsGBP(result.totalPence)}
             </p>
@@ -462,6 +462,7 @@ export function Calculator() {
                 lastDay={result.lastDay}
                 basePence={basePence}
                 showPenceOnly={showPenceOnly}
+                className="animate-fade-in"
               />
             )}
           </div>
@@ -499,7 +500,7 @@ export function Calculator() {
             </Button>
             {savedStates.length > 0 && (
               <select
-                className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors duration-200"
                 onChange={(e) => {
                   const id = e.target.value;
                   const s = savedStates.find((x) => x.id === id);

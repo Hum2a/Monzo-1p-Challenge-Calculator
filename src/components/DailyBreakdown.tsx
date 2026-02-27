@@ -32,7 +32,7 @@ export function DailyBreakdown({
   return (
     <div
       className={cn(
-        "overflow-y-auto rounded-md border border-border bg-muted/30",
+        "overflow-y-auto rounded-md border border-border bg-muted/30 transition-colors duration-200",
         className
       )}
       style={{ maxHeight: MAX_VISIBLE_HEIGHT }}

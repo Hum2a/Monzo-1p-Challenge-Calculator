@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background relative z-10">
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card animate-fade-in opacity-0">
         <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-full bg-primary flex items-center justify-center">
+            <div className="size-10 rounded-full bg-primary flex items-center justify-center transition-transform duration-200 hover:scale-105">
               <span className="text-primary-foreground font-bold text-lg">1p</span>
             </div>
             <div>
@@ -33,11 +33,11 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 animate-fade-in-up opacity-0 animation-delay-100">
         <Calculator />
       </main>
 
-      <footer className="border-t border-border py-6 mt-auto">
+      <footer className="border-t border-border py-6 mt-auto animate-fade-in opacity-0 animation-delay-200">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-1">
           <p>
             This is not financial advice. Always do your own research before saving or investing.
