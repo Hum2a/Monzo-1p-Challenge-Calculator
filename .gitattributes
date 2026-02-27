@@ -1,6 +1,12 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
+# Exclude from GitHub language stats (Linguist) - these skew toward HTML
+package-lock.json linguist-generated=true
+*.lock linguist-generated=true
+playwright-report/* linguist-generated=true
+test-results/* linguist-generated=true
+
 # Explicitly declare text files
 *.md text
 *.ts text
