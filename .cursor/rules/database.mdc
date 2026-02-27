@@ -1,0 +1,21 @@
+---
+description: Database schema and Prisma conventions
+globs: "prisma/**/*"
+alwaysApply: false
+---
+
+# Database Conventions
+
+## Schema
+- Models in `prisma/schema.prisma`
+- Auth.js models: User, Account, Session, VerificationToken, Authenticator
+- App model: SavedState (userId, name, state JSON, timestamps)
+
+## Prisma
+- Use `db` from `@/lib/db` for all queries
+- Never use raw SQL; use Prisma client
+- Always scope by userId for user data
+
+## Migrations
+- `npm run db:push` for dev/prototyping
+- `npm run db:migrate` for production migrations

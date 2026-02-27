@@ -1,0 +1,20 @@
+---
+description: Frontend and React component conventions
+globs: "**/components/**/*"
+alwaysApply: false
+---
+
+# Frontend Conventions
+
+## Components
+- Client components: "use client" when needed (hooks, events)
+- Prefer server components by default
+- Colocate styles; use Tailwind
+
+## State
+- LocalStorage for anonymous users (key: penny-challenge-settings)
+- Session for auth; use `useSession()` from next-auth/react
+
+## API
+- Fetch /api/save (POST), /api/saved (GET) when authenticated
+- Handle 401, 429, 500 gracefully

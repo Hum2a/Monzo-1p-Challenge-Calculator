@@ -1,0 +1,20 @@
+---
+description: Cloudflare deployment and build
+globs: "wrangler*.json*"
+alwaysApply: false
+---
+
+# Deployment (Cloudflare)
+
+## Build
+- `npm run build:cf` or `opennextjs-cloudflare build`
+- Output: `.open-next/`
+- Wrangler uses `.open-next/worker.js` and `.open-next/assets`
+
+## Config
+- wrangler.jsonc: main, compatibility_date, nodejs_compat, assets
+- open-next.config.ts: defineCloudflareConfig()
+
+## Env Vars
+- Set in Cloudflare Workers Build: AUTH_SECRET, AUTH_URL, DATABASE_URL, DIRECT_URL, AUTH_RESEND_KEY, AUTH_RESEND_FROM
+- AUTH_URL must match deployed URL

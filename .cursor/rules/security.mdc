@@ -1,0 +1,24 @@
+---
+description: Security baseline for the codebase
+alwaysApply: true
+---
+
+# Security Baseline
+
+## Input
+- Zod validation on all external input
+- Integer pence only; no float for money
+
+## Secrets
+- No secrets in client code
+- Use env vars; document in .env.example
+- Never log tokens, emails, passwords
+
+## API
+- Rate limit /api/save and /api/saved
+- CSRF: Auth.js handles for auth routes
+- Security headers in middleware
+
+## Database
+- Prisma ORM (parameterized queries)
+- Scope by userId for user data

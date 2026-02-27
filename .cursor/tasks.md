@@ -1,5 +1,13 @@
 # Build Checklist
 
+## Production (Phase 2)
+- [x] Cloudflare deployment config
+- [x] Neon PostgreSQL + Prisma
+- [x] Auth.js magic link (Resend)
+- [x] Save/Load for logged-in users
+- [x] Rate limiting, security headers
+- [x] Cursor rules (design, DB, schema, middleware, frontend, backend, deployment, security)
+
 ## Core
 - [x] Next N days mode
 - [x] Month mode

@@ -1,0 +1,28 @@
+---
+description: Design system and UI conventions for the 1p Challenge Calculator
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Design & UI Conventions
+
+## Brand
+- **Monzo palette**: Primary coral (#FE4B60), navy (#001E3A), teal (#007A8B), green (#4BB78F)
+- **Font**: Plus Jakarta Sans
+- **Tone**: Calm, financial tool, mobile-first
+
+## Layout
+- Mobile-first, one-hand usable
+- Max content width: max-w-lg (512px) for calculator card
+- Consistent spacing: p-4 sm:p-6 for cards
+
+## Components
+- Use shadcn-style components from `@/components/ui/*`
+- Primary actions: coral background (variant="default")
+- Secondary: outline or ghost
+- All interactive elements must have aria-labels
+
+## Accessibility
+- No essential info by color only
+- Keyboard navigable
+- High contrast (foreground/background)

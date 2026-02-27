@@ -1,0 +1,22 @@
+---
+description: Middleware and security layer
+globs: "src/middleware.ts"
+alwaysApply: false
+---
+
+# Middleware
+
+## Auth.js
+- Uses `auth()` wrapper from `@/auth`
+- Site is public; no route protection in middleware
+
+## Security Headers (must keep)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy
+- Content-Security-Policy
+
+## Don’t
+- Don’t use Node.js APIs in middleware (Cloudflare Workers runtime)
+- Don’t log sensitive data
