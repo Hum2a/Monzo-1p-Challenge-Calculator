@@ -115,7 +115,7 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 
 **Important:** Use **Workers** (not Pages). Create → Workers & Pages → Workers → Create Worker → Connect to Git.
 
-1. **Build command:** `npm ci && npx opennextjs-cloudflare build && node scripts/replace-og-for-cf.mjs`
+1. **Build command:** `npm run build:workers` (or `npx opennextjs-cloudflare build && node scripts/replace-og-for-cf.mjs`)
 2. **Deploy command:** `npx wrangler deploy` (default)
 3. **Framework preset:** None (or override if it defaults to Next.js)
 4. **Build variables:** Add `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
@@ -137,6 +137,16 @@ This error means the repo is connected to **Cloudflare Pages**, not Workers. Pag
 6. Add build variables (secrets) for `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
 7. Save. You can delete or ignore the old Pages project.
 
+#### Troubleshooting: "Could not find compiled Open Next config"
+
+This means the build command is wrong. Cloudflare Workers Build must use **OpenNext**, not plain Next.js. Set the build command to:
+
+```
+npm run build:workers
+```
+
+Do **not** use `npm run build` (that runs `next build` and produces the wrong output).
+
 #### Troubleshooting: "Application error" when sending magic link
 
 The Worker needs runtime secrets (AUTH_SECRET, AUTH_URL, DATABASE_URL, DIRECT_URL, AUTH_RESEND_KEY, AUTH_RESEND_FROM). If they are missing, auth will fail.
@@ -152,6 +162,7 @@ The Worker needs runtime secrets (AUTH_SECRET, AUTH_URL, DATABASE_URL, DIRECT_UR
 | `npm run dev` | Start dev server |
 | `npm run build` | Next.js build |
 | `npm run build:cf` | Cloudflare build |
+| `npm run build:workers` | Cloudflare build + OG stub (for Workers Build) |
 | `npm run deploy` | Deploy to Cloudflare |
 | `npm run deploy:prod` | Deploy using vars from `.dev.vars.production` |
 | `npm run db:generate` | Generate Prisma client |
