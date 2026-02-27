@@ -1,0 +1,13 @@
+# Production secrets for Cloudflare Workers deploy
+# Copy to .dev.vars.production and fill in real values
+# .dev.vars.production is gitignored – never commit real secrets
+#
+# Usage: npm run deploy:prod
+# (Loads these vars and runs the deploy with them)
+
+AUTH_SECRET=your-production-secret-from-openssl-rand-base64-32
+AUTH_URL=https://your-app.workers.dev
+DATABASE_URL=postgresql://user:pass@host-pooler.region.aws.neon.tech/dbname?sslmode=require
+DIRECT_URL=postgresql://user:pass@host.region.aws.neon.tech/dbname?sslmode=require
+AUTH_RESEND_KEY=re_your_resend_api_key
+AUTH_RESEND_FROM=1p Challenge <noreply@yourdomain.com>

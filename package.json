@@ -9,6 +9,7 @@
     "build:cf": "opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && node scripts/replace-og-for-cf.mjs && opennextjs-cloudflare deploy",
+    "deploy:prod": "node scripts/deploy-production.mjs",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",

@@ -35,6 +35,7 @@ prisma/migrations/*_migration_lock.toml
 .env.*
 !.env.example
 .dev.vars
+.dev.vars.production
 
 # Misc
 .DS_Store

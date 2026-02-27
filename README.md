@@ -92,21 +92,24 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
    - `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
 3. Push to `main` – the workflow deploys automatically.
 
-### Option B: Deploy from terminal (WSL or Mac/Linux)
+### Option B: Deploy from terminal with production vars (WSL or Mac/Linux)
 
-1. Set secrets in Cloudflare once (one-time setup):
+1. Copy the production template and fill in your values:
+   ```bash
+   cp .dev.vars.production.example .dev.vars.production
+   # Edit .dev.vars.production with real production secrets
+   ```
+2. Run `npm run deploy:prod` – loads vars, uploads secrets to Cloudflare, then builds and deploys.
+   - Use `npm run deploy:prod -- --no-secrets` to skip uploading secrets (e.g. if already set in the dashboard).
+
+*(Windows can fail on deploy—use WSL or GitHub Actions.)*
+
+**Alternative (manual secrets):** Set secrets in Cloudflare once, then `npm run deploy`:
    ```bash
    npx wrangler secret put AUTH_SECRET
    npx wrangler secret put AUTH_URL
-   npx wrangler secret put DATABASE_URL
-   npx wrangler secret put DIRECT_URL
-   npx wrangler secret put AUTH_RESEND_KEY
-   npx wrangler secret put AUTH_RESEND_FROM
+   # ... etc
    ```
-2. Ensure `.env.local` has values for the build.
-3. Run `npm run deploy`.
-
-*(Windows can fail on deploy—use WSL or GitHub Actions.)*
 
 ### Option C: Cloudflare Workers Build (connect Git)
 
@@ -128,6 +131,7 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 | `npm run build` | Next.js build |
 | `npm run build:cf` | Cloudflare build |
 | `npm run deploy` | Deploy to Cloudflare |
+| `npm run deploy:prod` | Deploy using vars from `.dev.vars.production` |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:push` | Push schema to DB |
 | `npm run lint` | ESLint |
