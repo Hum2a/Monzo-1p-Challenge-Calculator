@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +13,7 @@ export default async function AuthErrorPage({
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="text-center space-y-6 max-w-md">
+        <Image src="/Monzo-Emblem-Light.png" alt="Monzo" width={48} height={48} className="mx-auto" />
         <h1 className="text-2xl font-bold">Something went wrong</h1>
         <p className="text-muted-foreground">
           {error === "Verification"

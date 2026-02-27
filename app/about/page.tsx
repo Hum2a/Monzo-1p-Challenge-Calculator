@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -12,9 +13,12 @@ export default function AboutPage() {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">1p</span>
-            </div>
+            <Image
+              src="/Monzo-Emblem-Light.png"
+              alt="Monzo"
+              width={40}
+              height={40}
+            />
             <h1 className="text-xl font-bold text-foreground">1p Challenge Calculator</h1>
           </div>
           <Button variant="ghost" size="sm" asChild>

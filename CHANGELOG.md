@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - (Add new changes here)
 
+## [v0.1.1] - 2026-02-27
+
+### Added
+
+- Update layout and authentication pages with new images and icons
+
+### Changed
+
+- Improve CHANGELOG.md update process with intelligent categorization and concise...
+
+### Miscellaneous
+
+- Update .gitignore to include Python-related files and directories
+
+
 ## [v0.1.0] - 2026-02-27
 
 ### Other
