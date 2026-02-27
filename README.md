@@ -1,97 +1,103 @@
 # 1p Challenge Calculator
 
-A production-ready web app for the **1p Accumulator / Penny Challenge** savings plan. Calculate how much to deposit for any date range, month, or custom period—with mobile-first design and shareable links.
+A production-ready web app for the **1p Accumulator / Penny Challenge** savings plan. Calculate deposits for any date range, month, or custom period—with Monzo branding, mobile-first design, and optional account saving.
 
 ## Setup
 
 ```bash
 npm install
+cp .env.example .env.local
+# Edit .env.local with your values
+npm run db:generate
+npm run db:push
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Production Stack
+
+- **Cloudflare Workers** – Deployment via OpenNext adapter
+- **Neon PostgreSQL** – Database (auth + saved states)
+- **Auth.js (NextAuth v5)** – Magic link email auth (Resend)
+- **Prisma** – ORM
+- **Zod** – Validation
+- **Tailwind + shadcn** – UI
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTH_SECRET` | Yes (prod) | `openssl rand -base64 32` |
+| `AUTH_URL` | Yes (prod) | Full URL of your site |
+| `DATABASE_URL` | Yes (prod) | Neon pooled connection string |
+| `DIRECT_URL` | Yes (prod) | Neon direct connection string |
+| `AUTH_RESEND_KEY` | Yes (prod) | Resend API key |
+| `AUTH_RESEND_FROM` | No | Sender email (default: Resend onboarding) |
+
 ## How the Math Works
 
-The penny challenge uses a simple arithmetic series:
-
-- **Day 1** = 1p  
-- **Day k** = k pence  
-
-**Total for days a to b (inclusive):**
-
-$$\text{Sum} = \frac{b(b+1) - (a-1)a}{2} \text{ pence}$$
-
-Example: Days 60–90 = 60 + 61 + … + 90 = **2,325p** (£23.25).
-
-**Full challenge totals:**
-- **364 days:** £664.30  
-- **365 days:** £667.95  
-
-All calculations use **integer pence** end-to-end—no floats.
+- **Day 1** = 1p, **Day k** = k pence  
+- **Sum days a to b:** (b(b+1) − (a−1)a) / 2 pence  
+- **364 days:** £664.30 | **365 days:** £667.95  
+- Integer pence only—no floats
 
 ## Features
 
 - **3 modes:** Next N days, Month, Custom range  
-- **Challenge config:** Start date (default Jan 1), length (364 or 365 days)  
-- **Daily breakdown:** Toggle to see each day’s amount  
-- **Currency:** GBP or pence-only display  
-- **Advanced:** "I'm on day X" for mid-challenge planning  
-- **Copy result** & **Share link** (URL encodes params)  
+- **Anonymous:** Use immediately with localStorage  
+- **Account:** Sign in via magic link to save states to DB  
+- **Save/Load:** Up to 10 saved states per user  
 - **PWA:** Installable on mobile  
-- **localStorage:** Persists settings (no account required)  
 
-## Project Structure
+## Deployment (Cloudflare)
 
-```
-src/
-├── app/           # Next.js App Router pages
-├── components/    # UI components (Calculator, DailyBreakdown, ui/*)
-├── lib/
-│   ├── pennyChallenge.ts   # Pure math (tested)
-│   ├── validation.ts       # Zod schemas for inputs
-│   └── utils.ts            # cn() etc.
-```
+1. Create a Neon project and get `DATABASE_URL` + `DIRECT_URL`.
+2. Create a Resend account, verify domain, get API key.
+3. In Cloudflare Workers Build:
+   - Build command: `npm run build:cf`
+   - Output: `.open-next`
+   - Set env vars: `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`
+4. Deploy:
+   ```bash
+   npm run deploy
+   ```
+   Or connect GitHub to Workers Build for CI/CD.
 
-## Testing
+## Cursor Rules
 
-```bash
-# Unit tests (Vitest)
-npm run test
+Project-specific AI rules in `.cursor/rules/`:
 
-# E2E (Playwright)
-npm run test:e2e
-
-# If dev server already running (avoids lock conflict):
-# E2E_SKIP_SERVER=1 npm run test:e2e
-```
-
-## Deployment (Vercel)
-
-1. Push to GitHub and import the repo in Vercel.  
-2. Deploy. No extra env vars needed for the basic app.  
-3. Optional: Add `NEXT_PUBLIC_ANALYTICS_ID` if you enable analytics.  
-
-For DB/Auth (phase 2):
-- Set `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DATABASE_URL`
-- Use secure cookies; see Auth.js docs.
-
-## Security Notes
-
-- **Input validation:** All query params and form inputs validated with Zod.  
-- **Integer pence:** No float money math.  
-- **Headers:** CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy.  
-- **Secrets:** Never logged or exposed to the client.  
+- `design.mdc` – UI and design system
+- `database.mdc` – Prisma and DB
+- `schema.mdc` – Validation
+- `middleware.mdc` – Auth and security headers
+- `frontend.mdc` – React components
+- `backend.mdc` – API routes
+- `deployment.mdc` – Cloudflare
+- `security.mdc` – Security baseline (always apply)
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start dev server |
-| `npm run build` | Production build |
-| `npm run start` | Run production server |
-| `npm run test` | Run unit tests |
-| `npm run test:e2e` | Run Playwright E2E tests |
+| `npm run build` | Next.js build |
+| `npm run build:cf` | Cloudflare build |
+| `npm run deploy` | Deploy to Cloudflare |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:push` | Push schema to DB |
+| `npm run test` | Unit tests |
+| `npm run test:e2e` | Playwright E2E |
+
+## Security
+
+- Zod validation on all input
+- Rate limiting on /api/save and /api/saved
+- Security headers (CSP, X-Frame-Options, etc.)
+- No secrets in client; env vars only
+- Prisma for parameterized queries
+- Auth.js for secure session
 
 ## License
 
