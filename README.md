@@ -123,6 +123,20 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 
 **If you used Pages by mistake:** Cloudflare **Pages** expects `pages_build_output_dir` and uses the deprecated `@cloudflare/next-on-pages` adapter. This project uses **Workers** (OpenNext). Create a new **Worker** project: Workers & Pages → Workers → Create → Connect to Git. Use the build command above.
 
+#### Troubleshooting: "Output directory .vercel/output/static not found"
+
+This error means the repo is connected to **Cloudflare Pages**, not Workers. Pages looks for static output; this app outputs a Worker bundle (`.open-next/`).
+
+**Fix:** Create a **Worker** project and connect the same repo:
+
+1. Go to [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages)
+2. Click **Create** → **Worker** (not "Pages")
+3. Choose **Connect to Git** → select your repo
+4. Set **Build command:** `npm ci && npx opennextjs-cloudflare build && node scripts/replace-og-for-cf.mjs`
+5. Set **Deploy command:** `npx wrangler deploy` (or leave default)
+6. Add build variables (secrets) for `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
+7. Save. You can delete or ignore the old Pages project.
+
 ## Scripts
 
 | Command | Description |
