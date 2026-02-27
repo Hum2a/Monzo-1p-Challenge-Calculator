@@ -153,3 +153,40 @@ body::before {
 .animation-delay-150 { animation-delay: 150ms; }
 .animation-delay-200 { animation-delay: 200ms; }
 .animation-delay-250 { animation-delay: 250ms; }
+
+/* Sliding tab indicator - uses --tab-index (0, 1, 2...) for position */
+.tab-indicator-slide {
+  transform: translateX(calc(var(--tab-index, 0) * 100%));
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tab content slide/carousel animations */
+@keyframes tab-slide-in-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tab-slide-in-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.tab-content-slide-right {
+  animation: tab-slide-in-from-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.tab-content-slide-left {
+  animation: tab-slide-in-from-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

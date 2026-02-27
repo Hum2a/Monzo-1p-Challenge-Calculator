@@ -286,7 +286,7 @@ export function Calculator() {
         </div>
 
         <Tabs value={mode} onValueChange={(v: string) => setMode(v as Mode)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3" aria-label="Calculation mode">
+          <TabsList value={mode} className="grid w-full grid-cols-3" aria-label="Calculation mode">
             <TabsTrigger value="next-n" id="tab-next-n">Next N days</TabsTrigger>
             <TabsTrigger value="month" id="tab-month">Month</TabsTrigger>
             <TabsTrigger value="custom" id="tab-custom">Custom range</TabsTrigger>
