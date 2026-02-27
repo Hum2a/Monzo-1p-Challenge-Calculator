@@ -110,10 +110,15 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 
 ### Option C: Cloudflare Workers Build (connect Git)
 
-1. Workers & Pages → Create → Connect to Git.
-2. Build command: `npm run build:cf`; Root: project root.
-3. Add env vars in Build variables: `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
-4. Push to trigger deploy. Cloudflare builds on Linux (avoids Windows issues).
+**Important:** Use **Workers** (not Pages). Create → Workers & Pages → Workers → Create Worker → Connect to Git.
+
+1. **Build command:** `npm ci && npx opennextjs-cloudflare build && node scripts/replace-og-for-cf.mjs`
+2. **Deploy command:** `npx wrangler deploy` (default)
+3. **Framework preset:** None (or override if it defaults to Next.js)
+4. **Build variables:** Add `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
+5. Push to trigger deploy. Cloudflare builds on Linux (avoids Windows issues).
+
+**If you used Pages by mistake:** Pages uses the deprecated `@cloudflare/next-on-pages` adapter. Set **Framework preset** to **None** and use the build command above. Or create a **Worker** project instead.
 
 ## Scripts
 
