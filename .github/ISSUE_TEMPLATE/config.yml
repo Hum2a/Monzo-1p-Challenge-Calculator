@@ -1,0 +1,16 @@
+name: Issue
+description: Open a general issue
+title: "[Other] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to open an issue. For bugs and features, please use the dedicated templates.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: Describe your issue or request...
+    validations:
+      required: true
