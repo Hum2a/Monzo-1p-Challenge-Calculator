@@ -6,7 +6,7 @@ A penny challenge / 1p accumulator calculator website. Core: calculate sums for 
 ## Must-keep architecture
 - Pure math in `src/lib/pennyChallenge.ts`
 - UI in `src/components/*`
-- Routes in `src/app/*`
+- Routes in `app/*`
 - Validation in `src/lib/validation.ts`
 - Share links parsed/validated from URL query params
 
