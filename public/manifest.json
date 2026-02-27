@@ -4,8 +4,8 @@
   "description": "Plan your penny accumulator savings for any date range or month",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#171717",
+  "background_color": "#FAFBFC",
+  "theme_color": "#FE4B60",
   "icons": [
     {
       "src": "/icon-192.png",

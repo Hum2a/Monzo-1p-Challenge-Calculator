@@ -8,10 +8,15 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background relative z-10">
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">1p Challenge Calculator</h1>
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">1p</span>
+            </div>
+            <h1 className="text-xl font-bold text-foreground">1p Challenge Calculator</h1>
+          </div>
           <Button variant="ghost" size="sm" asChild>
             <Link href="/">Calculator</Link>
           </Button>

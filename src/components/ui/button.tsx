@@ -11,13 +11,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-foreground",
+          "bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary shadow-sm",
         secondary:
           "border border-input bg-muted hover:bg-muted/80 focus-visible:ring-muted-foreground",
         outline:
-          "border border-input bg-background hover:bg-muted hover:text-foreground focus-visible:ring-muted-foreground",
+          "border border-primary/30 text-primary hover:bg-primary/5 focus-visible:ring-primary",
         ghost: "hover:bg-muted hover:text-foreground focus-visible:ring-muted-foreground",
-        link: "text-foreground underline-offset-4 hover:underline focus-visible:ring-muted-foreground",
+        link: "text-primary underline-offset-4 hover:underline focus-visible:ring-primary",
       },
       size: {
         default: "h-10 px-4 py-2",

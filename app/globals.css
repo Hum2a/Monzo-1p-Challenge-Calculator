@@ -1,28 +1,39 @@
 @import "tailwindcss";
 
+/* Monzo brand colours */
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(0 0% 3.9%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(0 0% 3.9%);
-  --muted: hsl(0 0% 96.1%);
-  --muted-foreground: hsl(0 0% 45.1%);
-  --border: hsl(0 0% 89.8%);
-  --input: hsl(0 0% 89.8%);
-  --ring: hsl(0 0% 3.9%);
+  --monzo-coral: #FE4B60;
+  --monzo-navy: #001E3A;
+  --monzo-teal: #007A8B;
+  --monzo-green: #4BB78F;
+  --monzo-orange: #F1BD76;
+
+  --background: #FAFBFC;
+  --foreground: #001E3A;
+  --card: #ffffff;
+  --card-foreground: #001E3A;
+  --muted: #F0F4F8;
+  --muted-foreground: #5C6B7A;
+  --border: #E1E8ED;
+  --input: #E1E8ED;
+  --ring: #FE4B60;
+  --primary: #FE4B60;
+  --primary-foreground: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: hsl(0 0% 3.9%);
-    --foreground: hsl(0 0% 98%);
-    --card: hsl(0 0% 3.9%);
-    --card-foreground: hsl(0 0% 98%);
-    --muted: hsl(0 0% 14.9%);
-    --muted-foreground: hsl(0 0% 63.9%);
-    --border: hsl(0 0% 14.9%);
-    --input: hsl(0 0% 14.9%);
-    --ring: hsl(0 0% 83.1%);
+    --background: #001E3A;
+    --foreground: #F0F4F8;
+    --card: #002B4A;
+    --card-foreground: #F0F4F8;
+    --muted: #002B4A;
+    --muted-foreground: #8B9EAC;
+    --border: #003D6B;
+    --input: #003D6B;
+    --ring: #FE4B60;
+    --primary: #FE4B60;
+    --primary-foreground: #ffffff;
   }
 }
 
@@ -36,12 +47,32 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --font-sans: var(--font-sans), system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Monzo-style subtle top gradient accent */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, rgba(254, 75, 96, 0.04) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  body::before {
+    background: linear-gradient(180deg, rgba(254, 75, 96, 0.06) 0%, transparent 100%);
+  }
 }

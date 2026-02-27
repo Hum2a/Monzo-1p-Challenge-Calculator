@@ -1,27 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "1p Challenge Calculator | Penny Savings Plan",
+  title: "1p Challenge Calculator | Monzo",
   description:
-    "Calculate how much to save with the 1p Accumulator / Penny Challenge. Plan deposits for any date range, month, or custom period. Mobile-friendly savings calculator.",
+    "Plan your penny accumulator savings with Monzo. Calculate deposits for any date range, month, or custom period. Mobile-friendly savings calculator.",
   manifest: "/manifest.json",
   icons: { icon: "/icon-192.png", apple: "/icon-192.png" },
+  themeColor: "#FE4B60",
   openGraph: {
-    title: "1p Challenge Calculator | Penny Savings Plan",
+    title: "1p Challenge Calculator | Monzo",
     description:
-      "Calculate how much to save with the 1p Accumulator. Plan deposits for any date range.",
+      "Plan your penny accumulator savings. Calculate deposits for any date range.",
     type: "website",
   },
 };
@@ -33,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
+      <body className={`${plusJakarta.variable} antialiased min-h-screen`}>
         {children}
       </body>
     </html>

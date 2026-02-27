@@ -190,15 +190,15 @@ export function Calculator() {
   return (
     <Card className="w-full max-w-lg mx-auto">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl">1p Challenge Calculator</CardTitle>
+        <CardTitle className="text-xl text-foreground">1p Challenge Calculator</CardTitle>
         <CardDescription>
           Day count starts from your start date as Day 1.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Challenge config - collapsible or inline */}
-        <div className="space-y-2 rounded-lg border border-border p-3">
-          <p className="text-sm font-medium">Challenge settings</p>
+        <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+          <p className="text-sm font-medium text-foreground">Challenge settings</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block text-sm">
               <span className="sr-only">Start date</span>
@@ -371,8 +371,8 @@ export function Calculator() {
 
         {/* Result */}
         {result ? (
-          <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-            <p className="text-2xl font-bold tabular-nums" aria-live="polite">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+            <p className="text-2xl font-bold tabular-nums text-primary" aria-live="polite">
               {showPenceOnly ? `${result.totalPence}p` : formatPenceAsGBP(result.totalPence)}
             </p>
             {interpretation && (
@@ -421,7 +421,7 @@ export function Calculator() {
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
         <Button
-          variant="secondary"
+          variant="default"
           onClick={handleCopy}
           disabled={!result}
           aria-label="Copy result to clipboard"
