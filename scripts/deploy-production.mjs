@@ -5,8 +5,8 @@
  *
  * Loads .dev.vars.production, uploads secrets to Cloudflare, then builds and deploys.
  */
-import { execSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync, unlinkSync, openSync, closeSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,26 +52,20 @@ execSync("npx opennextjs-cloudflare build && node scripts/replace-og-for-cf.mjs 
 
 if (!skipSecrets) {
   console.log("\nUploading secrets to Cloudflare...");
+  const isWin = process.platform === "win32";
   for (const [key, value] of Object.entries(secrets)) {
     const tempPath = join(tmpdir(), `wrangler-secret-${key}-${Date.now()}`);
     try {
       writeFileSync(tempPath, value, "utf8");
-      const fd = openSync(tempPath, "r");
+      const quotedPath = `"${tempPath.replace(/"/g, '\\"')}"`;
+      const pipeCmd = isWin
+        ? `type ${quotedPath} | npx wrangler secret put ${key}`
+        : `cat ${quotedPath} | npx wrangler secret put ${key}`;
       try {
-        const r = spawnSync("npx", ["wrangler", "secret", "put", key], {
-          stdio: [fd, "inherit", "pipe"],
-          env,
-          cwd: root,
-        });
-        if (r.status !== 0) {
-          const err = (r.stderr || r.stdout || []).toString().trim();
-          console.error(`\nFailed to upload secret ${key}:`);
-          if (err) console.error(err);
-          console.error("\nTip: Run manually: echo YOUR_VALUE | npx wrangler secret put " + key);
-          process.exit(1);
-        }
-      } finally {
-        closeSync(fd);
+        execSync(pipeCmd, { shell: true, env, cwd: root, stdio: "inherit" });
+      } catch (err) {
+        console.error(`\nFailed to upload secret ${key}. Tip: Run manually: echo YOUR_VALUE | npx wrangler secret put ${key}`);
+        process.exit(1);
       }
     } finally {
       try {
