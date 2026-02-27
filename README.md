@@ -52,6 +52,19 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Deployment (Cloudflare)
 
+**Note:** Deploying from Windows can fail with `resvg.wasm?module` errors (WASM path handling). Use GitHub Actions (recommended) or WSL.
+
+### Option A: GitHub Actions (recommended)
+
+1. Push your repo to GitHub.
+2. Add these **repository secrets** (Settings → Secrets and variables → Actions):
+   - `CLOUDFLARE_API_TOKEN` – from [Cloudflare dashboard](https://dash.cloudflare.com/profile/api-tokens) (Create Token → Edit Cloudflare Workers)
+   - `CLOUDFLARE_ACCOUNT_ID` – from Workers & Pages → Overview → Account ID
+   - `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
+3. Push to `main` – the workflow deploys automatically.
+
+### Option B: Local deploy (WSL or Mac/Linux)
+
 1. Create a Neon project and get `DATABASE_URL` + `DIRECT_URL`.
 2. Create a Resend account, verify domain, get API key.
 3. In Cloudflare Workers Build:
