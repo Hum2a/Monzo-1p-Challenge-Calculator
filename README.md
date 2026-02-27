@@ -1,8 +1,30 @@
+<div align="center">
+
 # 1p Challenge Calculator
+
+[![CI](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/ci.yml)
+[![Deploy](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/GITHUB_OWNER/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers-orange?logo=cloudflare)](https://workers.cloudflare.com/)
 
 A production-ready web app for the **1p Accumulator / Penny Challenge** savings plan. Calculate deposits for any date range, month, or custom period—with Monzo branding, mobile-first design, and optional account saving.
 
-## Setup
+*[Report Bug](../../issues) · [Request Feature](../../issues) · [Contributing](CONTRIBUTING.md)*
+
+</div>
+
+---
+
+## Features
+
+- **3 modes:** Next N days, Month, Custom range  
+- **Anonymous:** Use immediately with localStorage  
+- **Account:** Sign in via magic link to save states to DB  
+- **Save/Load:** Up to 10 saved states per user  
+- **PWA:** Installable on mobile  
+
+## Quick Start
 
 ```bash
 npm install
@@ -28,12 +50,14 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 
 ## Production Stack
 
-- **Cloudflare Workers** – Deployment via OpenNext adapter
-- **Neon PostgreSQL** – Database (auth + saved states)
-- **Auth.js (NextAuth v5)** – Magic link email auth (Resend)
-- **Prisma** – ORM
-- **Zod** – Validation
-- **Tailwind + shadcn** – UI
+| Layer | Tech |
+|-------|------|
+| Hosting | **Cloudflare Workers** (OpenNext adapter) |
+| Database | **Neon PostgreSQL** (auth + saved states) |
+| Auth | **Auth.js (NextAuth v5)** – magic link (Resend) |
+| ORM | **Prisma** |
+| Validation | **Zod** |
+| UI | **Tailwind + shadcn** |
 
 ## Environment Variables
 
@@ -52,14 +76,6 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 - **Sum days a to b:** (b(b+1) − (a−1)a) / 2 pence  
 - **364 days:** £664.30 | **365 days:** £667.95  
 - Integer pence only—no floats
-
-## Features
-
-- **3 modes:** Next N days, Month, Custom range  
-- **Anonymous:** Use immediately with localStorage  
-- **Account:** Sign in via magic link to save states to DB  
-- **Save/Load:** Up to 10 saved states per user  
-- **PWA:** Installable on mobile  
 
 ## Deployment (Cloudflare)
 
@@ -96,20 +112,6 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 2. Build command: `npm run build:cf`; Root: project root.
 3. Add env vars in Build variables: `AUTH_SECRET`, `AUTH_URL`, `DATABASE_URL`, `DIRECT_URL`, `AUTH_RESEND_KEY`, `AUTH_RESEND_FROM`
 4. Push to trigger deploy. Cloudflare builds on Linux (avoids Windows issues).
-   Or connect GitHub to Workers Build for CI/CD.
-
-## Cursor Rules
-
-Project-specific AI rules in `.cursor/rules/`:
-
-- `design.mdc` – UI and design system
-- `database.mdc` – Prisma and DB
-- `schema.mdc` – Validation
-- `middleware.mdc` – Auth and security headers
-- `frontend.mdc` – React components
-- `backend.mdc` – API routes
-- `deployment.mdc` – Cloudflare
-- `security.mdc` – Security baseline (always apply)
 
 ## Scripts
 
@@ -121,18 +123,43 @@ Project-specific AI rules in `.cursor/rules/`:
 | `npm run deploy` | Deploy to Cloudflare |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:push` | Push schema to DB |
-| `npm run test` | Unit tests |
+| `npm run lint` | ESLint |
+| `npm run test` | Unit tests (Vitest) |
 | `npm run test:e2e` | Playwright E2E |
+
+## Project Structure
+
+```
+.cursor/rules/     # AI rules (design, DB, schema, security, etc.)
+.github/           # CI/CD, issue templates, PR template
+app/               # Next.js app router
+prisma/            # Schema and migrations
+src/               # Components, lib
+```
 
 ## Security
 
 - Zod validation on all input
-- Rate limiting on /api/save and /api/saved
+- Rate limiting on `/api/save` and `/api/saved`
 - Security headers (CSP, X-Frame-Options, etc.)
 - No secrets in client; env vars only
 - Prisma for parameterized queries
 - Auth.js for secure session
 
+See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
 ## License
 
-MIT
+[MIT](LICENSE)
+
+---
+
+<sub>Replace `GITHUB_OWNER` in the badge URLs above with your GitHub username.</sub>
