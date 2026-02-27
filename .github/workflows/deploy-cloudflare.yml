@@ -36,6 +36,9 @@ jobs:
           AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
           AUTH_RESEND_FROM: ${{ secrets.AUTH_RESEND_FROM }}
 
+      - name: Replace @vercel/og with stub (saves ~2.1 MB for 3 MiB free tier)
+        run: node scripts/replace-og-for-cf.mjs
+
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:

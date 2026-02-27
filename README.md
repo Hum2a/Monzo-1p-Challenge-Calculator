@@ -79,7 +79,9 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 
 ## Deployment (Cloudflare)
 
-**Note:** Deploying from Windows can fail with `resvg.wasm?module` errors (WASM path handling). Use GitHub Actions (recommended) or WSL.
+**Notes:**
+- **Free tier:** Workers are limited to 3 MiB. A `scripts/replace-og-for-cf.mjs` step swaps `@vercel/og` for a stub (~2.1 MB saved) to stay under the limit.
+- **Windows:** Deploying locally can fail with `resvg.wasm?module` path errors. Use GitHub Actions (recommended) or WSL.
 
 ### Option A: GitHub Actions (recommended)
 
