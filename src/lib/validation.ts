@@ -53,6 +53,12 @@ export const shareParamsSchema = z.object({
 
 export type ShareParams = z.infer<typeof shareParamsSchema>;
 
+/** Saved state for API - strict validation of state object */
+export const savedStateSchema = z.object({
+  name: z.string().max(100).optional(),
+  state: shareParamsSchema,
+});
+
 /** Validate URLSearchParams into ShareParams */
 export function parseShareParams(
   searchParams: URLSearchParams | Record<string, string | undefined>
