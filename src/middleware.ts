@@ -3,12 +3,19 @@ import { auth } from "@/auth";
 
 export default auth(() => {
   const response = NextResponse.next();
-  // Security headers moved to next.config.ts headers() so they apply to all responses
-  // (middleware headers can be skipped when auth() redirects)
+
+  // Security headers
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("X-DNS-Prefetch-Control", "on");
   response.headers.set(
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
   );
+  response.headers.set(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'self' https://humza-butt.onrender.com https://www.humza-butt.onrender.com; base-uri 'self'; form-action 'self'"
+  );
+
   return response;
 });
