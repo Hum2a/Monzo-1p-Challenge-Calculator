@@ -31,7 +31,7 @@ export default function Home() {
               <Link href="/about">About</Link>
             </Button>
             <Button variant="default" size="sm" asChild>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/Hum2a/Monzo-1p-Challenge-Calculator" target="_blank" rel="noopener noreferrer">
                 GitHub
               </a>
             </Button>

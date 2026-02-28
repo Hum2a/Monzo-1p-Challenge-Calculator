@@ -1,6 +1,10 @@
 <div align="center">
 
+<img src="public/Monzo-Emblem-Light.png" alt="Monzo" width="64" />
+
 # 1p Challenge Calculator
+
+*Monzo-inspired savings calculator*
 
 [![CI](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/ci.yml)
 [![Deploy](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/Hum2a/monzo-1p-challenge-calculator/actions/workflows/deploy-cloudflare.yml)
