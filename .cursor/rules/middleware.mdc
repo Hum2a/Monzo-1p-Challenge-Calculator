@@ -11,7 +11,7 @@ alwaysApply: false
 - Site is public; no route protection in middleware
 
 ## Security Headers (must keep)
-- X-Frame-Options: DENY
+- frame-ancestors: 'self' https://humza-butt.onrender.com (allows portfolio iframe)
 - X-Content-Type-Options: nosniff
 - Referrer-Policy: strict-origin-when-cross-origin
 - Permissions-Policy
