@@ -15,7 +15,7 @@ export default auth(() => {
   );
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'self' https://humza-butt.onrender.com; base-uri 'self'; form-action 'self'"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'self' https://humza-butt.onrender.com https://www.humza-butt.onrender.com https://*.onrender.com; base-uri 'self'; form-action 'self'"
   );
 
   return response;
