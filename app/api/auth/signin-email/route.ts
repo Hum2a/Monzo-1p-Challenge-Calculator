@@ -34,12 +34,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/verify", req.url));
   } catch (error) {
     if (error instanceof AuthError) {
-      console.error("[signin-email] AuthError:", error.type, error.message);
+      console.error(
+        "[signin-email] AuthError:",
+        error.type,
+        error.cause ?? error.message
+      );
       return NextResponse.redirect(
         new URL(`/auth/error?error=${encodeURIComponent(error.type)}`, req.url)
       );
     }
-    // Rethrow redirects (Next.js redirect() throws)
+    // Rethrow redirects (Next.js / Auth.js redirect() throws)
     throw error;
   }
 }

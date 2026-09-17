@@ -5,6 +5,8 @@ const ogStub = path.resolve(process.cwd(), "scripts/og-stub.mjs");
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Required for Prisma on OpenNext / Cloudflare Workers
+  serverExternalPackages: ["@prisma/client", ".prisma/client"],
   // Exclude @vercel/og (~2.1 MB) to stay under Cloudflare Workers 3 MiB free tier limit
   turbopack: {
     resolveAlias: {

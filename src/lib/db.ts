@@ -1,21 +1,23 @@
 /**
- * Prisma client for Neon PostgreSQL.
- * Uses the Neon serverless driver adapter so auth works on Cloudflare Workers
- * (plain Prisma TCP sockets are not available in the Workers runtime).
+ * Prisma + Neon for Cloudflare Workers / OpenNext.
+ * Per-request client (no global pool reuse) + HTTP adapter (fetch, not TCP/WebSocket).
+ * @see https://opennext.js.org/cloudflare/howtos/db
  */
 
+import { cache } from "react";
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
-import { neonConfig } from "@neondatabase/serverless";
+import { PrismaNeonHTTP } from "@prisma/adapter-neon";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
-}
-
-// Cloudflare Workers / edge: use the runtime WebSocket implementation
-if (typeof WebSocket !== "undefined") {
-  neonConfig.webSocketConstructor = WebSocket;
+/** Strip quotes / channel_binding — both break Neon serverless on Workers. */
+export function cleanDatabaseUrl(url: string): string {
+  const trimmed = url.trim().replace(/^['"]|['"]$/g, "");
+  try {
+    const parsed = new URL(trimmed);
+    parsed.searchParams.delete("channel_binding");
+    return parsed.toString();
+  } catch {
+    return trimmed;
+  }
 }
 
 function createPrismaClient(): PrismaClient {
@@ -23,14 +25,34 @@ function createPrismaClient(): PrismaClient {
     throw new Error("PrismaClient must not be used in the browser");
   }
 
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
+  const raw = process.env.DATABASE_URL;
+  if (!raw) {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const adapter = new PrismaNeon({ connectionString });
+  const connectionString = cleanDatabaseUrl(raw);
+  const adapter = new PrismaNeonHTTP(connectionString, {
+    arrayMode: false,
+    fullResults: true,
+  });
+
   return new PrismaClient({ adapter });
 }
 
-export const db = globalThis.prisma ?? createPrismaClient();
-if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
+/** Prefer this in Server Components / Route Handlers. Cached per React request. */
+export const getDb = cache(() => createPrismaClient());
+
+/**
+ * Sync proxy for Auth.js PrismaAdapter and existing `db` imports.
+ * Resolves to a per-request client via React `cache()`.
+ */
+export const db = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getDb();
+    const value = Reflect.get(client, prop, client);
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
