@@ -57,7 +57,7 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 | Layer | Tech |
 |-------|------|
 | Hosting | **Cloudflare Workers** (OpenNext adapter) |
-| Database | **Neon PostgreSQL** (auth + saved states) |
+| Database | **Neon PostgreSQL** (auth + saved states) via Prisma Neon serverless adapter |
 | Auth | **Auth.js (NextAuth v5)** – magic link (Resend) |
 | ORM | **Prisma** |
 | Validation | **Zod** |
