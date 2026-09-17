@@ -12,7 +12,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   providers: [
     Resend({
-      from: process.env.AUTH_RESEND_FROM ?? "1p Challenge <onboarding@resend.dev>",
+      from:
+        process.env.AUTH_RESEND_FROM ??
+        "1p Challenge <noreply@monzo-1p-challenge-calculator.online>",
       apiKey: process.env.AUTH_RESEND_KEY,
     }),
   ],

@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/accordion";
 import { DailyBreakdown } from "@/components/DailyBreakdown";
 import { MonthlyEmailPrefs } from "@/components/MonthlyEmailPrefs";
+import { BorderBeam } from "@/components/magicui/border-beam";
+import { SlidingNumber } from "@/components/animate-ui/sliding-number";
 import { Copy, Share2, Save } from "lucide-react";
 
 type Mode = "next-n" | "month" | "custom";
@@ -250,14 +252,15 @@ export function Calculator() {
     : null;
 
   return (
-    <Card className="w-full max-w-lg mx-auto animate-fade-in-scale opacity-0 shadow-sm hover:shadow-md">
-      <CardHeader className="pb-2">
+    <Card className="relative w-full max-w-lg mx-auto overflow-hidden border-border/80 bg-card/90 backdrop-blur-sm shadow-lg shadow-black/5">
+      <BorderBeam duration={10} />
+      <CardHeader className="pb-2 relative z-10">
         <CardTitle className="text-xl text-foreground">1p Challenge Calculator</CardTitle>
         <CardDescription>
           Day count starts from your start date as Day 1.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 relative z-10">
         {/* Challenge config - collapsible or inline */}
         <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 transition-colors duration-200">
           <p className="text-sm font-medium text-foreground">Challenge settings</p>
@@ -438,10 +441,19 @@ export function Calculator() {
 
         {/* Result */}
         {result ? (
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3 animate-fade-in-up transition-colors duration-200">
-            <p className="text-2xl font-bold tabular-nums text-primary" aria-live="polite">
-              {showPenceOnly ? `${result.totalPence}p` : formatPenceAsGBP(result.totalPence)}
-            </p>
+          <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 space-y-3 transition-colors duration-200">
+            {showPenceOnly ? (
+              <p className="text-3xl font-bold tabular-nums text-primary" aria-live="polite">
+                {result.totalPence}p
+              </p>
+            ) : (
+              <SlidingNumber
+                value={result.totalPence / 100}
+                decimals={2}
+                prefix="£"
+                className="text-3xl font-bold text-primary"
+              />
+            )}
             {interpretation && (
               <p className="text-sm text-muted-foreground">{interpretation}</p>
             )}
@@ -502,7 +514,7 @@ export function Calculator() {
           </Accordion>
         )}
       </CardContent>
-      <CardFooter className="flex flex-wrap gap-2">
+      <CardFooter className="flex flex-wrap gap-2 relative z-10">
         {session?.user && (
           <>
             <Button

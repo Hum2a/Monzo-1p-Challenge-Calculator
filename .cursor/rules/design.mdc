@@ -9,9 +9,18 @@ alwaysApply: false
 ## Brand
 - **Monzo palette**: Primary coral (#FE4B60), navy (#001E3A), teal (#007A8B), green (#4BB78F)
 - **Font**: Plus Jakarta Sans
-- **Tone**: Calm, financial tool, mobile-first
+- **Tone**: Calm, financial tool, mobile-first, motion-enhanced
+
+## Motion stack
+- **Motion** (`motion/react`) for page/section transitions and springs
+- **Animate UI–style** pieces under `src/components/animate-ui/` (e.g. SlidingNumber)
+- **Magic UI–style** accents under `src/components/magicui/` (e.g. BorderBeam)
+- **React Bits–style** atmosphere under `src/components/react-bits/` (e.g. AuroraBackground)
+- Always respect `prefers-reduced-motion` / `useReducedMotion()`
+- Prefer 2–3 intentional motions per viewport (entrance, hover, value change)
 
 ## Layout
+- Shared chrome via `SiteShell`
 - Mobile-first, one-hand usable
 - Max content width: max-w-lg (512px) for calculator card
 - Consistent spacing: p-4 sm:p-6 for cards

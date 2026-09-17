@@ -9,6 +9,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://monzo-1p-challenge-calculator.online"),
   title: "1p Challenge Calculator | Monzo",
   description:
     "Plan your penny accumulator savings with Monzo. Calculate deposits for any date range, month, or custom period. Mobile-friendly savings calculator.",
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
     description:
       "Plan your penny accumulator savings. Calculate deposits for any date range.",
     type: "website",
+    url: "https://monzo-1p-challenge-calculator.online",
   },
 };
 

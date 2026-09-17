@@ -107,7 +107,8 @@ export async function sendResendEmail(payload: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const apiKey = process.env.AUTH_RESEND_KEY;
   const from =
-    process.env.AUTH_RESEND_FROM ?? "1p Challenge <onboarding@resend.dev>";
+    process.env.AUTH_RESEND_FROM ??
+    "1p Challenge <noreply@monzo-1p-challenge-calculator.online>";
 
   if (!apiKey) {
     return { ok: false, error: "AUTH_RESEND_KEY not configured" };

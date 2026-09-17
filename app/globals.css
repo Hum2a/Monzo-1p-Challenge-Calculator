@@ -2,37 +2,38 @@
 
 /* Monzo brand colours */
 :root {
-  --monzo-coral: #FE4B60;
-  --monzo-navy: #001E3A;
-  --monzo-teal: #007A8B;
-  --monzo-green: #4BB78F;
-  --monzo-orange: #F1BD76;
+  --monzo-coral: #fe4b60;
+  --monzo-navy: #001e3a;
+  --monzo-teal: #007a8b;
+  --monzo-green: #4bb78f;
+  --monzo-orange: #f1bd76;
 
-  --background: #FAFBFC;
-  --foreground: #001E3A;
+  --background: #f7f9fc;
+  --foreground: #001e3a;
   --card: #ffffff;
-  --card-foreground: #001E3A;
-  --muted: #F0F4F8;
-  --muted-foreground: #5C6B7A;
-  --border: #E1E8ED;
-  --input: #E1E8ED;
-  --ring: #FE4B60;
-  --primary: #FE4B60;
+  --card-foreground: #001e3a;
+  --muted: #eef3f8;
+  --muted-foreground: #5c6b7a;
+  --border: #dce5ee;
+  --input: #dce5ee;
+  --ring: #fe4b60;
+  --primary: #fe4b60;
   --primary-foreground: #ffffff;
+  --beam-angle: 0deg;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #001E3A;
-    --foreground: #F0F4F8;
-    --card: #002B4A;
-    --card-foreground: #F0F4F8;
-    --muted: #002B4A;
-    --muted-foreground: #8B9EAC;
-    --border: #003D6B;
-    --input: #003D6B;
-    --ring: #FE4B60;
-    --primary: #FE4B60;
+    --background: #00101f;
+    --foreground: #f0f4f8;
+    --card: #002338;
+    --card-foreground: #f0f4f8;
+    --muted: #002b4a;
+    --muted-foreground: #8b9eac;
+    --border: #003d6b;
+    --input: #003d6b;
+    --ring: #fe4b60;
+    --primary: #fe4b60;
     --primary-foreground: #ffffff;
   }
 }
@@ -50,6 +51,8 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --font-sans: var(--font-sans), system-ui, sans-serif;
+  --animate-border-beam: border-beam var(--beam-duration, 8s) linear infinite;
+  --animate-aurora: aurora-drift 14s ease-in-out infinite alternate;
 }
 
 body {
@@ -58,29 +61,34 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Monzo-style subtle top gradient accent */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 200px;
-  background: linear-gradient(180deg, rgba(254, 75, 96, 0.04) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  body::before {
-    background: linear-gradient(180deg, rgba(254, 75, 96, 0.06) 0%, transparent 100%);
+@keyframes border-beam {
+  to {
+    --beam-angle: 360deg;
   }
 }
 
-/* Animation keyframes */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes aurora-drift {
+  from {
+    transform: translate(-50%, 0) scale(1);
+  }
+  to {
+    transform: translate(-48%, 12px) scale(1.06);
+  }
+}
+
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fade-in-up {
@@ -127,7 +135,6 @@ body::before {
   }
 }
 
-/* Animation utility classes */
 .animate-fade-in {
   animation: fade-in 0.4s ease-out forwards;
 }
@@ -148,19 +155,32 @@ body::before {
   animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Stagger delays for sequential animations */
-.animation-delay-100 { animation-delay: 100ms; }
-.animation-delay-150 { animation-delay: 150ms; }
-.animation-delay-200 { animation-delay: 200ms; }
-.animation-delay-250 { animation-delay: 250ms; }
+.animate-border-beam {
+  animation: border-beam var(--beam-duration, 8s) linear infinite;
+}
 
-/* Sliding tab indicator - uses --tab-index (0, 1, 2...) for position */
+.animate-aurora {
+  animation: aurora-drift 14s ease-in-out infinite alternate;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+.animation-delay-150 {
+  animation-delay: 150ms;
+}
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+.animation-delay-250 {
+  animation-delay: 250ms;
+}
+
 .tab-indicator-slide {
   transform: translateX(calc(var(--tab-index, 0) * 100%));
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Tab content slide/carousel animations */
 @keyframes tab-slide-in-from-right {
   from {
     opacity: 0;
@@ -189,4 +209,20 @@ body::before {
 
 .tab-content-slide-left {
   animation: tab-slide-in-from-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-border-beam,
+  .animate-aurora,
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-fade-in-scale,
+  .tab-content-slide-right,
+  .tab-content-slide-left {
+    animation: none !important;
+  }
+
+  .tab-indicator-slide {
+    transition: none;
+  }
 }

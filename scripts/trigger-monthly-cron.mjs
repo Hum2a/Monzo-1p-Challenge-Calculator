@@ -4,7 +4,7 @@
  *
  * Usage:
  *   npm run cron:trigger
- *   npm run cron:trigger -- https://your-app.workers.dev
+ *   npm run cron:trigger -- https://monzo-1p-challenge-calculator.online
  *
  * Reads CRON_SECRET (and optional AUTH_URL) from .env.local, .env, or .dev.vars.
  */

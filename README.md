@@ -61,18 +61,20 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 | Auth | **Auth.js (NextAuth v5)** – magic link (Resend) |
 | ORM | **Prisma** |
 | Validation | **Zod** |
-| UI | **Tailwind + shadcn** |
+| UI | **Tailwind + shadcn** with Motion, Animate UI / Magic UI / React Bits–style accents |
+
+Copy-first motion components live under `src/components/animate-ui`, `magicui`, and `react-bits` (keeps the Worker bundle small vs bulk UI kits).
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `AUTH_SECRET` | Yes (prod) | `openssl rand -base64 32` |
-| `AUTH_URL` | Yes (prod) | Full URL of your site |
+| `AUTH_URL` | Yes (prod) | `https://monzo-1p-challenge-calculator.online` |
 | `DATABASE_URL` | Yes (prod) | Neon pooled connection string |
 | `DIRECT_URL` | Yes (prod) | Neon direct connection string |
 | `AUTH_RESEND_KEY` | Yes (prod) | Resend API key (magic links + monthly emails) |
-| `AUTH_RESEND_FROM` | No | Sender email (default: Resend onboarding) |
+| `AUTH_RESEND_FROM` | No | Default: `1p Challenge <noreply@monzo-1p-challenge-calculator.online>` |
 | `CRON_SECRET` | Yes (prod) | Bearer token for `/api/cron/monthly-transfer` |
 
 ### Monthly transfer emails
@@ -80,12 +82,12 @@ Uses `.dev.vars` for secrets (copy from `.dev.vars.example`).
 Monthly emails are **on by default** for accounts. Users can turn them off under **Monthly transfer email** on the calculator. On the 1st of each month at **08:00 UTC**, Cloudflare cron calls the app, which emails each opted-in account how much to transfer into Monzo for that month.
 
 ```bash
-# Production deploy (loads .dev.vars.production, builds, deploys, uploads secrets including CRON_SECRET)
+# Production deploy always syncs Cloudflare secrets from .dev.vars.production, then builds and deploys
 npm run deploy
 
 # Manually fire the monthly email job (uses CRON_SECRET + AUTH_URL)
 npm run cron:trigger
-npm run cron:trigger -- https://your-app.workers.dev
+npm run cron:trigger -- https://monzo-1p-challenge-calculator.online
 ```
 
 ## How the Math Works
@@ -117,17 +119,12 @@ npm run cron:trigger -- https://your-app.workers.dev
    cp .dev.vars.production.example .dev.vars.production
    # Edit .dev.vars.production with real production secrets
    ```
-2. Run `npm run deploy` – loads vars, builds, deploys, and uploads secrets to Cloudflare.
-   - Use `npm run deploy -- --no-secrets` to skip uploading secrets (e.g. if already set in the dashboard).
+2. Run `npm run deploy` – **syncs Cloudflare secrets first** from `.dev.vars.production`, then builds and deploys.
+   - Use `npm run deploy -- --no-secrets` only if secrets are already set and you want to skip the upload step.
 
 *(Windows can fail on deploy—use WSL or GitHub Actions.)*
 
-**Alternative (manual secrets):** Set secrets in Cloudflare once, then `npm run deploy:cf`:
-   ```bash
-   npx wrangler secret put AUTH_SECRET
-   npx wrangler secret put AUTH_URL
-   # ... etc
-   ```
+**Note:** `npm run deploy`, `npm run deploy:prod`, and `npm run deploy:cf` all use the same script and sync secrets by default.
 
 ### Option C: Cloudflare Workers Build (connect Git)
 
@@ -169,7 +166,7 @@ Do **not** use `npm run build` (that runs `next build` and produces the wrong ou
 
 The Worker needs runtime secrets (AUTH_SECRET, AUTH_URL, DATABASE_URL, DIRECT_URL, AUTH_RESEND_KEY, AUTH_RESEND_FROM, CRON_SECRET). If they are missing, auth or monthly emails will fail.
 
-- **GitHub Actions:** The workflow now uploads secrets after deploy. Ensure all 7 vars are set in repo Settings → Secrets and variables → Actions. `AUTH_URL` must match your Worker URL (e.g. `https://monzo-1p-challenge-calculator.humzab1711.workers.dev`).
+- **GitHub Actions:** The workflow uploads secrets **before** deploy. Ensure all 7 vars are set in repo Settings → Secrets and variables → Actions. `AUTH_URL` must be `https://monzo-1p-challenge-calculator.online`.
 - **Cloudflare Workers Build (connect Git):** Add secrets in the dashboard: Workers & Pages → your Worker → Settings → Variables and Secrets → Add variable (encrypted).
 - **Manual deploy:** Run `npm run deploy` (loads `.dev.vars.production` and uploads secrets) or set them once: `npx wrangler secret put AUTH_SECRET`, etc.
 
@@ -181,8 +178,8 @@ The Worker needs runtime secrets (AUTH_SECRET, AUTH_URL, DATABASE_URL, DIRECT_UR
 | `npm run build` | Next.js build |
 | `npm run build:cf` | Cloudflare build |
 | `npm run build:workers` | Cloudflare build + OG stub (for Workers Build) |
-| `npm run deploy` | Production deploy (`.dev.vars.production` + secrets + Cloudflare) |
-| `npm run deploy:cf` | Build and deploy without loading/uploading secrets |
+| `npm run deploy` | Sync Cloudflare secrets from `.dev.vars.production`, then build + deploy |
+| `npm run deploy:cf` | Same as `deploy` (secrets synced first) |
 | `npm run deploy:prod` | Alias of `npm run deploy` |
 | `npm run cron:trigger` | Manually run the monthly transfer email job |
 | `npm run db:generate` | Generate Prisma client |

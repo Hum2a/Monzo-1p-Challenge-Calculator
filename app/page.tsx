@@ -1,60 +1,45 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Calculator } from "@/components/Calculator";
-import { AuthButton } from "@/components/AuthButton";
+import { SiteShell } from "@/components/SiteShell";
+import { FadeIn } from "@/components/FadeIn";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-background relative z-10">
-      <header className="border-b border-border bg-card animate-fade-in opacity-0">
-        <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/Monzo-Emblem-Light.png"
-              alt="Monzo"
-              width={40}
-              height={40}
-              className="transition-transform duration-200 hover:scale-105"
-              priority
-            />
-            <div>
-              <h1 className="text-xl font-bold text-foreground">1p Challenge Calculator</h1>
-              <p className="text-sm text-muted-foreground">
-                Plan your penny accumulator savings
-              </p>
+    <SiteShell>
+      <div className="container mx-auto px-4 pt-8 sm:pt-12 pb-4 max-w-lg">
+        <FadeIn>
+          <section className="mb-8 text-center sm:text-left" aria-labelledby="hero-heading">
+            <p className="text-sm font-medium text-primary mb-2 tracking-wide">
+              Monzo · 1p Accumulator
+            </p>
+            <h1
+              id="hero-heading"
+              className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground text-balance"
+            >
+              Know exactly how much to put aside
+            </h1>
+            <p className="mt-3 text-muted-foreground text-base sm:text-lg max-w-md mx-auto sm:mx-0">
+              Calculate your daily deposits for any month, stretch of days, or
+              custom range — then transfer into Monzo with confidence.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2 justify-center sm:justify-start">
+              <Button asChild>
+                <a href="#calculator">Open calculator</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/about">How it works</Link>
+              </Button>
             </div>
-          </div>
-          <nav className="flex items-center gap-2 flex-wrap">
-            <AuthButton />
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/about">About</Link>
-            </Button>
-            <Button variant="default" size="sm" asChild>
-              <a href="https://github.com/Hum2a/Monzo-1p-Challenge-Calculator" target="_blank" rel="noopener noreferrer">
-                GitHub
-              </a>
-            </Button>
-          </nav>
-        </div>
-      </header>
+          </section>
+        </FadeIn>
 
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 animate-fade-in-up opacity-0 animation-delay-100">
-        <Calculator />
-      </main>
-
-      <footer className="border-t border-border py-6 mt-auto animate-fade-in opacity-0 animation-delay-200">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-3">
-          <div className="flex items-center justify-center gap-2">
-            <Image src="/Monzo_logo.png" alt="Monzo" width={72} height={16} className="opacity-70" />
-            <span className="text-xs">inspired</span>
+        <FadeIn delay={0.12}>
+          <div id="calculator" className="scroll-mt-24">
+            <Calculator />
           </div>
-          <p>
-            This is not financial advice. Always do your own research before saving or investing.
-          </p>
-          <p>Your data stays in your browser. No account required.</p>
-        </div>
-      </footer>
-    </div>
+        </FadeIn>
+      </div>
+    </SiteShell>
   );
 }
