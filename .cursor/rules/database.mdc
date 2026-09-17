@@ -10,6 +10,7 @@ alwaysApply: false
 - Models in `prisma/schema.prisma`
 - Auth.js models: User, Account, Session, VerificationToken, Authenticator
 - App model: SavedState (userId, name, state JSON, timestamps)
+- User also stores monthly email prefs: monthlyEmailEnabled, challengeStart, challengeLength, basePence
 
 ## Prisma
 - Use `db` from `@/lib/db` for all queries

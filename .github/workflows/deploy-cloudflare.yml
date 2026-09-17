@@ -57,6 +57,7 @@ jobs:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
           AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
           AUTH_RESEND_FROM: ${{ secrets.AUTH_RESEND_FROM }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           printf '%s' "$AUTH_SECRET" | npx wrangler secret put AUTH_SECRET
           printf '%s' "$AUTH_URL" | npx wrangler secret put AUTH_URL
@@ -64,3 +65,4 @@ jobs:
           printf '%s' "$DIRECT_URL" | npx wrangler secret put DIRECT_URL
           printf '%s' "$AUTH_RESEND_KEY" | npx wrangler secret put AUTH_RESEND_KEY
           printf '%s' "$AUTH_RESEND_FROM" | npx wrangler secret put AUTH_RESEND_FROM
+          printf '%s' "$CRON_SECRET" | npx wrangler secret put CRON_SECRET
