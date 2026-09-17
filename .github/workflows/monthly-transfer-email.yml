@@ -1,0 +1,28 @@
+# Monthly transfer emails via GitHub Actions schedule.
+# Used instead of Cloudflare Worker cron triggers (Free plan limit: 5 crons/account).
+name: Monthly transfer emails
+
+on:
+  schedule:
+    # 08:00 UTC on the 1st of every month
+    - cron: "0 8 1 * *"
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger monthly transfer emails
+        env:
+          AUTH_URL: ${{ secrets.AUTH_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${AUTH_URL:-}" ] || [ -z "${CRON_SECRET:-}" ]; then
+            echo "AUTH_URL and CRON_SECRET must be set in repo secrets."
+            exit 1
+          fi
+          BASE="${AUTH_URL%/}"
+          curl -fsS -X POST "${BASE}/api/cron/monthly-transfer" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json"

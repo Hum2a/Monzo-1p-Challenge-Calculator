@@ -79,7 +79,9 @@ Copy-first motion components live under `src/components/animate-ui`, `magicui`, 
 
 ### Monthly transfer emails
 
-Monthly emails are **on by default** for accounts. Users can turn them off under **Monthly transfer email** on the calculator. On the 1st of each month at **08:00 UTC**, Cloudflare cron calls the app, which emails each opted-in account how much to transfer into Monzo for that month.
+Monthly emails are **on by default** for accounts. Users can turn them off under **Monthly transfer email** on the calculator. On the 1st of each month at **08:00 UTC**, [GitHub Actions](.github/workflows/monthly-transfer-email.yml) calls `/api/cron/monthly-transfer` (Cloudflare Worker cron triggers are disabled on Free — 5 crons/account limit).
+
+Ensure repo secrets include `AUTH_URL` and `CRON_SECRET`. You can also run manually via **Actions → Monthly transfer emails → Run workflow**, or:
 
 ```bash
 # Production deploy always syncs Cloudflare secrets from .dev.vars.production, then builds and deploys

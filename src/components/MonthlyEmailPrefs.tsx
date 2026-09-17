@@ -115,7 +115,7 @@ export function MonthlyEmailPrefs({
             Email me on the 1st with this month&apos;s total
           </label>
           <p id="monthly-email-help" className="text-xs text-muted-foreground mt-0.5">
-            On by default. Sent via Resend around 08:00 UTC on the 1st of each month.
+            Sent via Resend around 08:00 UTC on the 1st of each month (GitHub Actions schedule).
           </p>
         </div>
       </div>

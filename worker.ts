@@ -15,8 +15,10 @@ const worker = {
   fetch: handler.fetch,
 
   /**
-   * Runs on the 1st of each month (see wrangler triggers.crons).
-   * Test: wrangler dev --test-scheduled
+   * Optional Cloudflare scheduled handler.
+   * Free plan: cron triggers are disabled in wrangler (account limit).
+   * Monthly emails run via GitHub Actions (.github/workflows/monthly-transfer-email.yml).
+   * Re-enable wrangler triggers.crons when on Workers Paid if preferred.
    */
   async scheduled(
     _controller: ScheduledController,
