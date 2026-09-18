@@ -25,12 +25,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await signIn("resend", {
+    const result = await signIn("resend", {
       email: email.trim().toLowerCase(),
       redirectTo: "/",
+      redirect: false,
     });
 
-    // signIn redirects internally; if we reach here, redirect to verify
+    const location =
+      typeof result === "string" ? result : "/auth/verify";
+    const errorCode = errorCodeFromAuthUrl(location);
+    if (errorCode) {
+      console.error("[signin-email] Auth returned error:", errorCode);
+      return NextResponse.redirect(
+        new URL(`/auth/error?error=${encodeURIComponent(errorCode)}`, req.url)
+      );
+    }
+
     return NextResponse.redirect(new URL("/auth/verify", req.url));
   } catch (error) {
     if (error instanceof AuthError) {
@@ -40,10 +50,36 @@ export async function POST(req: NextRequest) {
         error.cause ?? error.message
       );
       return NextResponse.redirect(
-        new URL(`/auth/error?error=${encodeURIComponent(error.type)}`, req.url)
+        new URL(
+          `/auth/error?error=${encodeURIComponent(publicAuthError(error.type))}`,
+          req.url
+        )
       );
     }
     // Rethrow redirects (Next.js / Auth.js redirect() throws)
     throw error;
   }
+}
+
+function errorCodeFromAuthUrl(location: string): string | null {
+  try {
+    const url = new URL(location, "https://monzo-1p-challenge-calculator.online");
+    const error = url.searchParams.get("error");
+    if (!error) return null;
+    return publicAuthError(error);
+  } catch {
+    return null;
+  }
+}
+
+/** Auth.js maps many server errors to "Configuration"; email-send failures are EmailSignin. */
+function publicAuthError(type: string): string {
+  if (
+    type === "EmailSignInError" ||
+    type === "EmailSignin" ||
+    type === "EmailSend"
+  ) {
+    return "EmailSignin";
+  }
+  return type;
 }

@@ -9,6 +9,8 @@ const ERROR_COPY: Record<string, string> = {
     "The sign-in link may have expired or already been used. Please request a new one.",
   EmailSignin:
     "We couldn't send the magic link. Check that Resend is configured (API key + verified domain for the From address) and try again.",
+  EmailSignInError:
+    "We couldn't send the magic link. Check that Resend is configured (API key + verified domain for the From address) and try again.",
   Configuration:
     "Auth isn't configured correctly on the server (AUTH_SECRET, AUTH_URL, AUTH_RESEND_KEY, or database). Check Cloudflare secrets.",
   AdapterError:
