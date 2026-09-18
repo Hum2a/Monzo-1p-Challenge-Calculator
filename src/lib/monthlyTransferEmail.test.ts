@@ -67,6 +67,13 @@ describe("buildMonthlyTransferEmail", () => {
     expect(email.subject).toContain("March 2026");
     expect(email.text).toContain("Days 60–90");
     expect(email.html).toContain("£23.25");
+    expect(email.html).toContain("March 2026");
+    expect(email.html).toContain("Monzo-Emblem-Light.png");
+    expect(email.html).toContain("Monzo_logo.png");
+    expect(email.html).toContain("Days");
+    expect(email.html).toContain("60–90");
+    expect(email.html).toContain("#FE4B60");
+    expect(email.html).toContain("Open calculator");
   });
 });
 

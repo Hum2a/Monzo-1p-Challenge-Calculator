@@ -10,6 +10,7 @@ import {
   type ChallengeConfig,
   type RangeResult,
 } from "@/lib/pennyChallenge";
+import { buildMonthlyTransferEmailHtml } from "@/lib/monthlyTransferEmailHtml";
 
 export type UserEmailPrefs = {
   id: string;
@@ -123,13 +124,7 @@ export function buildMonthlyTransferEmail(opts: {
     `— 1p Challenge Calculator`,
   ].join("\n");
 
-  const html = `
-    <p>Hi,</p>
-    <p>For <strong>${monthLabel}</strong>, transfer <strong>${amount}</strong> into your Monzo pot for the 1p challenge.</p>
-    <p>Days ${result.firstDay}–${result.lastDay} (${result.dayCount} days).<br/>
-    First day: ${formatPenceAsGBP(result.firstDayPence)} · Last day: ${formatPenceAsGBP(result.lastDayPence)}.</p>
-    <p>— 1p Challenge Calculator</p>
-  `.trim();
+  const html = buildMonthlyTransferEmailHtml({ monthLabel, result });
 
   return {
     to: email,
