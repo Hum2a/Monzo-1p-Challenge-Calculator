@@ -23,9 +23,9 @@ model User {
   authenticators Authenticator[]
   savedStates    SavedState[]
 
-  // Monthly transfer reminder email prefs (on by default for new accounts)
-  monthlyEmailEnabled Boolean @default(true)
-  challengeStart      String? // YYYY-MM-DD; null = Jan 1 of send-time year
+  // Monthly transfer reminder (opt-in; cron requires a saved challengeStart)
+  monthlyEmailEnabled Boolean @default(false)
+  challengeStart      String? // YYYY-MM-DD; null = not configured, skip emails
   challengeLength     Int     @default(364)
   basePence           Int     @default(1)
 }

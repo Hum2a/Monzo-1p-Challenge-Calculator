@@ -1,15 +1,17 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type { EmailPrefs } from "@/lib/validation";
+import { formatPenceAsGBP, type ChallengeConfig } from "@/lib/pennyChallenge";
+import { nextTransferPreview } from "@/lib/monthlyTransferEmail";
 
 type PrefsStatus = "idle" | "loading" | "saving" | "saved" | "error";
 
 type Props = {
-  /** Current calculator challenge fields — used when enabling / saving */
   challengeStart: string;
   challengeLength: number;
   basePence: number;
@@ -20,13 +22,26 @@ export function MonthlyEmailPrefs({
   challengeLength,
   basePence,
 }: Props) {
-  const { data: session } = useSession();
-  const [enabled, setEnabled] = React.useState(true);
-  const [prefStart, setPrefStart] = React.useState(challengeStart);
-  const [prefLength, setPrefLength] = React.useState(challengeLength);
-  const [prefBase, setPrefBase] = React.useState(basePence);
+  const { data: session, status: sessionStatus } = useSession();
+  const [enabled, setEnabled] = React.useState(false);
+  const [savedStart, setSavedStart] = React.useState<string | null>(null);
+  const [savedEnabled, setSavedEnabled] = React.useState(false);
   const [status, setStatus] = React.useState<PrefsStatus>("idle");
   const [loaded, setLoaded] = React.useState(false);
+
+  const config: ChallengeConfig = React.useMemo(
+    () => ({
+      startDate: new Date(challengeStart),
+      challengeLengthDays: challengeLength === 365 ? 365 : 364,
+      basePence,
+    }),
+    [challengeStart, challengeLength, basePence]
+  );
+
+  const preview = React.useMemo(
+    () => nextTransferPreview(config),
+    [config]
+  );
 
   React.useEffect(() => {
     if (!session?.user) {
@@ -42,10 +57,10 @@ export function MonthlyEmailPrefs({
       })
       .then((data) => {
         if (cancelled) return;
-        setEnabled(data.monthlyEmailEnabled);
-        setPrefStart(data.challengeStart ?? challengeStart);
-        setPrefLength(data.challengeLength === 365 ? 365 : 364);
-        setPrefBase(data.basePence ?? 1);
+        const on = data.monthlyEmailEnabled && Boolean(data.challengeStart);
+        setEnabled(on);
+        setSavedEnabled(on);
+        setSavedStart(data.challengeStart ?? null);
         setLoaded(true);
         setStatus("idle");
       })
@@ -58,20 +73,39 @@ export function MonthlyEmailPrefs({
     return () => {
       cancelled = true;
     };
-    // Only reload when session identity changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.email]);
 
-  if (!session?.user) return null;
+  if (sessionStatus === "loading") {
+    return (
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        Loading…
+      </p>
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+        <p className="text-sm font-medium">Monthly Monzo reminder</p>
+        <p className="text-sm text-muted-foreground">
+          Sign in to get an email on the 1st with how much to transfer this
+          month, based on your challenge start date.
+        </p>
+        <Button asChild size="sm">
+          <Link href="/auth/signin">Sign in to get a 1st-of-month reminder</Link>
+        </Button>
+      </div>
+    );
+  }
 
   const handleSave = async () => {
     setStatus("saving");
     try {
       const body: EmailPrefs = {
         monthlyEmailEnabled: enabled,
-        challengeStart: prefStart || null,
-        challengeLength: prefLength === 365 ? 365 : 364,
-        basePence: prefBase,
+        challengeStart,
+        challengeLength: challengeLength === 365 ? 365 : 364,
+        basePence,
       };
       const res = await fetch("/api/account/email-prefs", {
         method: "PATCH",
@@ -80,10 +114,10 @@ export function MonthlyEmailPrefs({
       });
       if (!res.ok) throw new Error("failed");
       const data = (await res.json()) as EmailPrefs;
-      setEnabled(data.monthlyEmailEnabled);
-      setPrefStart(data.challengeStart ?? prefStart);
-      setPrefLength(data.challengeLength === 365 ? 365 : 364);
-      setPrefBase(data.basePence);
+      const on = data.monthlyEmailEnabled && Boolean(data.challengeStart);
+      setEnabled(on);
+      setSavedEnabled(on);
+      setSavedStart(data.challengeStart ?? null);
       setStatus("saved");
       setTimeout(() => setStatus("idle"), 2000);
     } catch {
@@ -92,15 +126,24 @@ export function MonthlyEmailPrefs({
     }
   };
 
-  const useCalculatorSettings = () => {
-    setPrefStart(challengeStart);
-    setPrefLength(challengeLength === 365 ? 365 : 364);
-    setPrefBase(basePence);
-  };
+  const previewLabel = preview
+    ? `On 1 ${format(new Date(preview.year, preview.month - 1, 1), "MMMM yyyy")}, transfer ${formatPenceAsGBP(preview.result.totalPence)} (days ${preview.result.firstDay}–${preview.result.lastDay}).`
+    : "That month sits outside your challenge period — adjust the start date above.";
 
   return (
-    <div className="rounded-md border border-border p-3 space-y-3">
-      <div className="flex items-start gap-2">
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        {previewLabel}
+      </p>
+
+      {savedEnabled && savedStart && (
+        <p className="text-xs text-muted-foreground">
+          On for start {savedStart}. Saving again updates the reminder to the
+          challenge settings above.
+        </p>
+      )}
+
+      <label className="flex items-start gap-2 cursor-pointer">
         <input
           id="monthly-email-enabled"
           type="checkbox"
@@ -110,91 +153,31 @@ export function MonthlyEmailPrefs({
           onChange={(e) => setEnabled(e.target.checked)}
           aria-describedby="monthly-email-help"
         />
-        <div>
-          <label htmlFor="monthly-email-enabled" className="text-sm font-medium">
-            Email me on the 1st with this month&apos;s total
-          </label>
-          <p id="monthly-email-help" className="text-xs text-muted-foreground mt-0.5">
-            Sent via Resend around 08:00 UTC on the 1st of each month (GitHub Actions schedule).
-          </p>
-        </div>
-      </div>
+        <span>
+          <span className="text-sm font-medium">
+            Email me this amount on the 1st
+          </span>
+          <span id="monthly-email-help" className="block text-xs text-muted-foreground mt-0.5">
+            Around 08:00 UTC on the 1st of each month, using your saved start date.
+          </span>
+        </span>
+      </label>
 
-      {enabled && (
-        <div className="grid gap-2 sm:grid-cols-3">
-          <div className="space-y-1">
-            <label htmlFor="email-challenge-start" className="text-xs text-muted-foreground">
-              Challenge start
-            </label>
-            <Input
-              id="email-challenge-start"
-              type="date"
-              value={prefStart}
-              onChange={(e) => setPrefStart(e.target.value)}
-              aria-label="Challenge start date for emails"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="email-challenge-length" className="text-xs text-muted-foreground">
-              Length
-            </label>
-            <select
-              id="email-challenge-length"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={prefLength}
-              onChange={(e) => setPrefLength(Number(e.target.value))}
-              aria-label="Challenge length for emails"
-            >
-              <option value={364}>364 days</option>
-              <option value={365}>365 days</option>
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="email-base-pence" className="text-xs text-muted-foreground">
-              Base pence
-            </label>
-            <Input
-              id="email-base-pence"
-              type="number"
-              min={1}
-              max={100}
-              value={prefBase}
-              onChange={(e) => setPrefBase(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
-              aria-label="Base pence for emails"
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleSave}
-          disabled={status === "saving" || status === "loading" || !loaded}
-          aria-label="Save monthly email preferences"
-        >
-          {status === "saving"
-            ? "Saving..."
-            : status === "saved"
-              ? "Saved!"
-              : status === "error"
-                ? "Error"
-                : "Save email prefs"}
-        </Button>
-        {enabled && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={useCalculatorSettings}
-            aria-label="Copy challenge settings from calculator"
-          >
-            Use calculator settings
-          </Button>
-        )}
-      </div>
+      <Button
+        type="button"
+        size="sm"
+        onClick={handleSave}
+        disabled={status === "saving" || status === "loading" || !loaded}
+        aria-label="Save monthly transfer reminder"
+      >
+        {status === "saving"
+          ? "Saving..."
+          : status === "saved"
+            ? "Saved!"
+            : status === "error"
+              ? "Couldn’t save"
+              : "Save reminder"}
+      </Button>
     </div>
   );
 }

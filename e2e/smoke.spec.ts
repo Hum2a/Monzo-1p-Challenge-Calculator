@@ -11,7 +11,7 @@ test.describe("1p Challenge Calculator - Smoke test", () => {
   test("shows result for default Next N days mode", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("tab", { name: /next n days/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("tab", { name: /^days$/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/£/)).toBeVisible({ timeout: 10000 });
   });
 

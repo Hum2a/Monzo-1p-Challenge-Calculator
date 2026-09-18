@@ -30,6 +30,7 @@ import { SlidingNumber } from "@/components/animate-ui/sliding-number";
 import { Copy, Share2, Save } from "lucide-react";
 
 type Mode = "next-n" | "month" | "custom";
+type TabValue = Mode | "email";
 
 const STORAGE_KEY = "penny-challenge-settings";
 
@@ -65,6 +66,7 @@ function defaultChallengeStart(year: number) {
 export function Calculator() {
   const currentYear = new Date().getFullYear();
   const [mode, setMode] = React.useState<Mode>("next-n");
+  const [tab, setTab] = React.useState<TabValue>("next-n");
   const [n, setN] = React.useState(30);
   const [month, setMonth] = React.useState(new Date().getMonth() + 1);
   const [year, setYear] = React.useState(currentYear);
@@ -94,7 +96,10 @@ export function Calculator() {
       : null;
     const stored = loadFromStorage();
     const merged = { ...stored, ...params };
-    if (merged.mode) setMode(merged.mode as Mode);
+    if (merged.mode) {
+      setMode(merged.mode as Mode);
+      setTab(merged.mode as Mode);
+    }
     if (merged.n != null) setN(merged.n);
     if (merged.month != null) setMonth(merged.month);
     if (merged.year != null) setYear(merged.year);
@@ -203,7 +208,10 @@ export function Calculator() {
 
   const handleLoad = (s: { state: ShareParams }) => {
     const st = s.state as ShareParams;
-    if (st.mode) setMode(st.mode as Mode);
+    if (st.mode) {
+      setMode(st.mode as Mode);
+      setTab(st.mode as Mode);
+    }
     if (st.n != null) setN(st.n);
     if (st.month != null) setMonth(st.month);
     if (st.year != null) setYear(st.year);
@@ -289,11 +297,20 @@ export function Calculator() {
           </div>
         </div>
 
-        <Tabs value={mode} onValueChange={(v: string) => setMode(v as Mode)} className="w-full">
-          <TabsList value={mode} className="grid w-full grid-cols-3" aria-label="Calculation mode">
-            <TabsTrigger value="next-n" id="tab-next-n">Next N days</TabsTrigger>
+        <Tabs
+          value={tab}
+          onValueChange={(v: string) => {
+            const next = v as TabValue;
+            setTab(next);
+            if (next !== "email") setMode(next);
+          }}
+          className="w-full"
+        >
+          <TabsList value={tab} className="grid w-full grid-cols-4" aria-label="Calculator tabs">
+            <TabsTrigger value="next-n" id="tab-next-n">Days</TabsTrigger>
             <TabsTrigger value="month" id="tab-month">Month</TabsTrigger>
-            <TabsTrigger value="custom" id="tab-custom">Custom range</TabsTrigger>
+            <TabsTrigger value="custom" id="tab-custom">Range</TabsTrigger>
+            <TabsTrigger value="email" id="tab-email">Email</TabsTrigger>
           </TabsList>
 
           <TabsContent value="next-n" aria-labelledby="tab-next-n">
@@ -413,9 +430,17 @@ export function Calculator() {
               </label>
             </div>
           </TabsContent>
+
+          <TabsContent value="email" aria-labelledby="tab-email">
+            <MonthlyEmailPrefs
+              challengeStart={challengeStart}
+              challengeLength={challengeLength}
+              basePence={basePence}
+            />
+          </TabsContent>
         </Tabs>
 
-        {/* Display toggle */}
+        {tab !== "email" && (
         <div className="flex flex-wrap gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -438,9 +463,9 @@ export function Calculator() {
             <span className="text-sm">Pence only</span>
           </label>
         </div>
+        )}
 
-        {/* Result */}
-        {result ? (
+        {tab !== "email" && (result ? (
           <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 space-y-3 transition-colors duration-200">
             {showPenceOnly ? (
               <p className="text-3xl font-bold tabular-nums text-primary" aria-live="polite">
@@ -483,9 +508,9 @@ export function Calculator() {
           <p className="text-sm text-muted-foreground" aria-live="polite">
             Select a range within your challenge period to see the total.
           </p>
-        )}
+        ))}
 
-        {formulaExplanation && (
+        {tab !== "email" && formulaExplanation && (
           <Accordion type="single" collapsible>
             <AccordionItem value="formula">
               <AccordionTrigger>How is this calculated?</AccordionTrigger>
@@ -499,20 +524,6 @@ export function Calculator() {
           </Accordion>
         )}
 
-        {session?.user && (
-          <Accordion type="single" collapsible>
-            <AccordionItem value="monthly-email">
-              <AccordionTrigger>Monthly transfer email</AccordionTrigger>
-              <AccordionContent>
-                <MonthlyEmailPrefs
-                  challengeStart={challengeStart}
-                  challengeLength={challengeLength}
-                  basePence={basePence}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        )}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2 relative z-10">
         {session?.user && (

@@ -4,7 +4,6 @@
  */
 
 import { format } from "date-fns";
-import { db } from "@/lib/db";
 import {
   computeForMonth,
   formatPenceAsGBP,
@@ -58,6 +57,49 @@ export function resolveChallengeConfig(
     challengeLengthDays: length,
     basePence: base,
   };
+}
+
+/** True when the user opted in and saved a challenge start (signing in alone is not enough). */
+export function isMonthlyEmailEligible(user: {
+  monthlyEmailEnabled: boolean;
+  email: string | null;
+  challengeStart: string | null;
+}): boolean {
+  return (
+    user.monthlyEmailEnabled &&
+    typeof user.email === "string" &&
+    user.email.includes("@") &&
+    typeof user.challengeStart === "string" &&
+    user.challengeStart.length > 0
+  );
+}
+
+export type TransferPreview = {
+  month: number;
+  year: number;
+  result: RangeResult;
+};
+
+/**
+ * Preview for the next scheduled 1st-of-month email.
+ * On the 1st, that email is for the current calendar month; otherwise the next month.
+ */
+export function nextTransferPreview(
+  config: ChallengeConfig,
+  now: Date = new Date()
+): TransferPreview | null {
+  let year = now.getFullYear();
+  let month = now.getMonth() + 1;
+  if (now.getDate() > 1) {
+    month += 1;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+  }
+  const result = computeForMonth(month, year, config);
+  if (!result) return null;
+  return { month, year, result };
 }
 
 export function buildMonthlyTransferEmail(opts: {
@@ -153,10 +195,12 @@ export async function runMonthlyTransferEmails(
   month: number,
   year: number
 ): Promise<MonthlyRunResult> {
+  const { db } = await import("@/lib/db");
   const users = await db.user.findMany({
     where: {
       monthlyEmailEnabled: true,
       email: { not: null },
+      challengeStart: { not: null },
     },
     select: {
       id: true,
@@ -173,7 +217,7 @@ export async function runMonthlyTransferEmails(
   let errors = 0;
 
   for (const user of users) {
-    if (!user.email) {
+    if (!isMonthlyEmailEligible(user) || !user.email) {
       skipped++;
       continue;
     }

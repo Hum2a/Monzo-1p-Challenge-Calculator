@@ -10,8 +10,6 @@
     "build:workers": "opennextjs-cloudflare build && node scripts/replace-og-for-cf.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "node scripts/deploy-production.mjs",
-    "deploy:cf": "node scripts/deploy-production.mjs",
-    "deploy:prod": "node scripts/deploy-production.mjs",
     "cron:trigger": "node scripts/trigger-monthly-cron.mjs",
     "start": "next start",
     "lint": "eslint",

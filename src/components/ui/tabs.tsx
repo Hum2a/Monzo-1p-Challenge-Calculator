@@ -4,7 +4,7 @@ import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "@/lib/utils";
 
-const TAB_VALUES = ["next-n", "month", "custom"] as const;
+const TAB_VALUES = ["next-n", "month", "custom", "email"] as const;
 
 const SlideDirectionContext = React.createContext<number>(0);
 
@@ -78,7 +78,7 @@ const TabsList = React.forwardRef<
     >
       {showIndicator && (
         <div
-          className="tab-indicator-slide absolute left-1 top-1 z-0 h-[calc(100%-8px)] w-[calc((100%-8px)/3)] rounded-md bg-primary shadow-sm"
+          className="tab-indicator-slide absolute left-1 top-1 z-0 h-[calc(100%-8px)] w-[calc((100%-8px)/4)] rounded-md bg-primary shadow-sm"
           style={{ "--tab-index": activeIndex } as React.CSSProperties}
           aria-hidden
         />
@@ -96,7 +96,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "relative inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary-foreground data-[state=active]:bg-primary [.tabs-with-indicator_&]:z-10 [.tabs-with-indicator_&][data-state=active]:bg-transparent",
+      "relative inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary-foreground data-[state=active]:bg-primary sm:px-3 sm:text-sm [.tabs-with-indicator_&]:z-10 [.tabs-with-indicator_&][data-state=active]:bg-transparent",
       className
     )}
     {...props}

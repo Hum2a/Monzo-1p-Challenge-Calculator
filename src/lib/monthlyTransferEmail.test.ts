@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   buildMonthlyTransferEmail,
   defaultChallengeStartIso,
+  isMonthlyEmailEligible,
+  nextTransferPreview,
   parseChallengeStartDate,
   resolveChallengeConfig,
 } from "./monthlyTransferEmail";
@@ -65,5 +67,73 @@ describe("buildMonthlyTransferEmail", () => {
     expect(email.subject).toContain("March 2026");
     expect(email.text).toContain("Days 60–90");
     expect(email.html).toContain("£23.25");
+  });
+});
+
+describe("isMonthlyEmailEligible", () => {
+  it("skips users without a saved challenge start", () => {
+    expect(
+      isMonthlyEmailEligible({
+        monthlyEmailEnabled: true,
+        email: "user@example.com",
+        challengeStart: null,
+      })
+    ).toBe(false);
+  });
+
+  it("skips users who have not opted in", () => {
+    expect(
+      isMonthlyEmailEligible({
+        monthlyEmailEnabled: false,
+        email: "user@example.com",
+        challengeStart: "2026-01-01",
+      })
+    ).toBe(false);
+  });
+
+  it("allows opted-in users with an email and start date", () => {
+    expect(
+      isMonthlyEmailEligible({
+        monthlyEmailEnabled: true,
+        email: "user@example.com",
+        challengeStart: "2026-01-01",
+      })
+    ).toBe(true);
+  });
+});
+
+describe("nextTransferPreview", () => {
+  const config = resolveChallengeConfig(
+    { challengeStart: "2026-01-01", challengeLength: 364, basePence: 1 },
+    2026
+  );
+
+  it("uses the current month on the 1st", () => {
+    const preview = nextTransferPreview(config, new Date(2026, 2, 1));
+    expect(preview).not.toBeNull();
+    expect(preview!.month).toBe(3);
+    expect(preview!.year).toBe(2026);
+    expect(preview!.result.totalPence).toBe(2325);
+  });
+
+  it("uses the next month after the 1st", () => {
+    const preview = nextTransferPreview(config, new Date(2026, 1, 18));
+    expect(preview).not.toBeNull();
+    expect(preview!.month).toBe(3);
+    expect(preview!.year).toBe(2026);
+    expect(preview!.result.totalPence).toBe(2325);
+  });
+
+  it("rolls into the next year in December", () => {
+    const preview = nextTransferPreview(config, new Date(2025, 11, 15));
+    expect(preview).not.toBeNull();
+    expect(preview!.month).toBe(1);
+    expect(preview!.year).toBe(2026);
+    expect(preview!.result.totalPence).toBe(496);
+  });
+
+  it("returns null when the next month is outside the challenge", () => {
+    const preview = nextTransferPreview(config, new Date(2026, 11, 15));
+    expect(preview).toBeNull();
   });
 });
