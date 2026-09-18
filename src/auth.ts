@@ -7,6 +7,7 @@ import NextAuth from "next-auth";
 import Resend from "next-auth/providers/resend";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
+import { sendMagicLinkEmail } from "@/lib/magicLinkEmail";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -16,6 +17,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         process.env.AUTH_RESEND_FROM ??
         "1p Challenge <noreply@monzo-1p-challenge-calculator.online>",
       apiKey: process.env.AUTH_RESEND_KEY,
+      sendVerificationRequest: async ({ identifier, url, provider }) => {
+        const apiKey = provider.apiKey;
+        const from = provider.from;
+        if (!apiKey || !from) {
+          throw new Error("Resend is not configured");
+        }
+        await sendMagicLinkEmail({ to: identifier, url, from, apiKey });
+      },
     }),
   ],
   pages: {
