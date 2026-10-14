@@ -11,6 +11,9 @@ import {
   formatPenceAsGBP,
   annualTotalPence,
   MULTIPLIER_OPTIONS,
+  dateToDayNumber,
+  dayNumberToDate,
+  sumRangeInPence,
   type ChallengeConfig,
   type RangeResult,
 } from "@/lib/pennyChallenge";
@@ -83,6 +86,13 @@ export function Calculator() {
   );
   const [challengeLength, setChallengeLength] = React.useState(364);
   const [basePence, setBasePence] = React.useState(1);
+  const [hasSwitch, setHasSwitch] = React.useState(false);
+  const [switchDay, setSwitchDay] = React.useState<number | null>(null);
+  const [switchDate, setSwitchDate] = React.useState<string>(
+    format(addDays(new Date(defaultChallengeStart(currentYear)), 90), "yyyy-MM-dd")
+  );
+  const [switchDayInputStr, setSwitchDayInputStr] = React.useState("91");
+  const [switchBasePence, setSwitchBasePence] = React.useState(4);
   const [showBreakdown, setShowBreakdown] = React.useState(false);
   const [showPenceOnly, setShowPenceOnly] = React.useState(false);
   const [firstDayOffset, setFirstDayOffset] = React.useState<number | null>(null); // "I'm on day X"
@@ -113,6 +123,15 @@ export function Calculator() {
     if (merged.challengeLength != null) setChallengeLength(merged.challengeLength);
     if (merged.basePence != null) setBasePence(merged.basePence);
     if (merged.firstDayOffset != null) setFirstDayOffset(merged.firstDayOffset);
+    if (merged.switchDay != null || merged.switchDate != null || merged.switchBasePence != null) {
+      setHasSwitch(true);
+      if (merged.switchDay != null) {
+        setSwitchDay(merged.switchDay);
+        setSwitchDayInputStr(String(merged.switchDay));
+      }
+      if (merged.switchDate) setSwitchDate(merged.switchDate);
+      if (merged.switchBasePence != null) setSwitchBasePence(merged.switchBasePence);
+    }
   }, []);
 
   // Sync day input display when firstDayOffset is set externally (URL, load)
@@ -120,13 +139,33 @@ export function Calculator() {
     if (firstDayOffset != null) setDayInputStr(String(firstDayOffset));
   }, [firstDayOffset]);
 
+  const effectiveSwitchDay = React.useMemo(() => {
+    if (!hasSwitch) return null;
+    if (switchDay != null && switchDay >= 1) {
+      return Math.min(switchDay, challengeLength);
+    }
+    try {
+      const d = dateToDayNumber(new Date(switchDate), {
+        startDate: new Date(challengeStart),
+        challengeLengthDays: challengeLength,
+      });
+      if (d != null) return d;
+    } catch {
+      // ignore
+    }
+    return 91;
+  }, [hasSwitch, switchDay, switchDate, challengeStart, challengeLength]);
+
   const config: ChallengeConfig = React.useMemo(
     () => ({
       startDate: new Date(challengeStart),
       challengeLengthDays: challengeLength,
       basePence,
+      switchDay: hasSwitch ? effectiveSwitchDay : null,
+      switchDate: hasSwitch ? switchDate : null,
+      switchBasePence: hasSwitch ? switchBasePence : null,
     }),
-    [challengeStart, challengeLength, basePence]
+    [challengeStart, challengeLength, basePence, hasSwitch, effectiveSwitchDay, switchDate, switchBasePence]
   );
 
   const effectiveDayOffset = firstDayOffset != null
@@ -140,7 +179,9 @@ export function Calculator() {
         return computeRange(
           effectiveDayOffset,
           Math.min(effectiveDayOffset + n - 1, config.challengeLengthDays),
-          basePence
+          basePence,
+          config.switchDay,
+          config.switchBasePence
         );
       }
       return computeNextNDays(new Date(fromDate), n, config);
@@ -167,8 +208,11 @@ export function Calculator() {
       challengeLength,
       basePence,
       firstDayOffset: effectiveDayOffset ?? undefined,
+      switchDay: hasSwitch && effectiveSwitchDay ? effectiveSwitchDay : undefined,
+      switchDate: hasSwitch && switchDate ? switchDate : undefined,
+      switchBasePence: hasSwitch ? switchBasePence : undefined,
     }),
-    [mode, n, fromDate, month, year, customStart, customEnd, challengeStart, challengeLength, basePence, effectiveDayOffset, firstDayOffset]
+    [mode, n, fromDate, month, year, customStart, customEnd, challengeStart, challengeLength, basePence, effectiveDayOffset, firstDayOffset, hasSwitch, effectiveSwitchDay, switchDate, switchBasePence]
   );
 
   React.useEffect(() => {
@@ -224,6 +268,16 @@ export function Calculator() {
     if (st.challengeLength != null) setChallengeLength(st.challengeLength);
     if (st.basePence != null) setBasePence(st.basePence);
     setFirstDayOffset(st.firstDayOffset ?? null);
+    if (st.switchDay != null || st.switchDate != null || st.switchBasePence != null) {
+      setHasSwitch(true);
+      setSwitchDay(st.switchDay ?? null);
+      if (st.switchDay != null) setSwitchDayInputStr(String(st.switchDay));
+      if (st.switchDate) setSwitchDate(st.switchDate);
+      if (st.switchBasePence != null) setSwitchBasePence(st.switchBasePence);
+    } else {
+      setHasSwitch(false);
+      setSwitchDay(null);
+    }
   };
 
   const shareUrl = typeof window !== "undefined"
@@ -236,7 +290,9 @@ export function Calculator() {
 
   const copyText = result
     ? [
-        `1p Challenge${basePence > 1 ? ` (${basePence}p/day · ${basePence}x scale)` : ""}: ${result.dayCount} days`,
+        hasSwitch && effectiveSwitchDay != null
+          ? `1p Challenge (${basePence}p/day up to day ${effectiveSwitchDay - 1}, then ${switchBasePence}p/day): ${result.dayCount} days`
+          : `1p Challenge${basePence > 1 ? ` (${basePence}p/day · ${basePence}x scale)` : ""}: ${result.dayCount} days`,
         `First day: ${showPenceOnly ? `${result.firstDayPence}p` : formatPenceAsGBP(result.firstDayPence)}`,
         `Last day: ${showPenceOnly ? `${result.lastDayPence}p` : formatPenceAsGBP(result.lastDayPence)}`,
         `Total: ${showPenceOnly ? `${result.totalPence}p` : formatPenceAsGBP(result.totalPence)}`,
@@ -256,10 +312,18 @@ export function Calculator() {
 
   const interpretation = result ? getInterpretation(mode, result, {
     n, fromDate, month, year, customStart, customEnd, showPenceOnly, firstDayOffset: effectiveDayOffset, basePence,
+    switchDay: hasSwitch ? effectiveSwitchDay : null,
+    switchBasePence: hasSwitch ? switchBasePence : null,
   }) : null;
 
   const formulaExplanation = result
-    ? basePence > 1
+    ? hasSwitch && effectiveSwitchDay != null
+      ? result.lastDay < effectiveSwitchDay
+        ? `Sum from day ${result.firstDay} to ${result.lastDay} = (${result.lastDay}×${result.lastDay + 1} − ${result.firstDay - 1}×${result.firstDay}) / 2 × ${basePence}p = ${result.totalPence} pence (${formatPenceAsGBP(result.totalPence)}) [before Day ${effectiveSwitchDay} switch]`
+        : result.firstDay >= effectiveSwitchDay
+        ? `Sum from day ${result.firstDay} to ${result.lastDay} = (${result.lastDay}×${result.lastDay + 1} − ${result.firstDay - 1}×${result.firstDay}) / 2 × ${switchBasePence}p = ${result.totalPence} pence (${formatPenceAsGBP(result.totalPence)}) [after Day ${effectiveSwitchDay} switch]`
+        : `Sum split at Day ${effectiveSwitchDay}: [Days ${result.firstDay}–${effectiveSwitchDay - 1} at ${basePence}p = ${formatPenceAsGBP(sumRangeInPence(result.firstDay, effectiveSwitchDay - 1, basePence))}] + [Days ${effectiveSwitchDay}–${result.lastDay} at ${switchBasePence}p = ${formatPenceAsGBP(sumRangeInPence(effectiveSwitchDay, result.lastDay, switchBasePence))}] = ${result.totalPence} pence (${formatPenceAsGBP(result.totalPence)})`
+      : basePence > 1
       ? `Sum from day ${result.firstDay} to ${result.lastDay} = [(${result.lastDay}×${result.lastDay + 1} − ${result.firstDay - 1}×${result.firstDay}) / 2] × ${basePence}p = ${result.totalPence} pence (${formatPenceAsGBP(result.totalPence)})`
       : `Sum from day ${result.firstDay} to ${result.lastDay} = (${result.lastDay}×${result.lastDay + 1} − ${result.firstDay - 1}×${result.firstDay}) / 2 = ${result.totalPence} pence`
     : null;
@@ -279,7 +343,9 @@ export function Calculator() {
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-foreground">Challenge settings</p>
             <span className="text-xs font-semibold text-primary tracking-wide bg-primary/10 px-2 py-0.5 rounded-full">
-              {basePence}x scale · +{basePence}p/day
+              {hasSwitch && effectiveSwitchDay != null
+                ? `${basePence}p → ${switchBasePence}p (from day ${effectiveSwitchDay})`
+                : `${basePence}x scale · +${basePence}p/day`}
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -288,7 +354,13 @@ export function Calculator() {
               <Input
                 type="date"
                 value={challengeStart}
-                onChange={(e) => setChallengeStart(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setChallengeStart(val);
+                  if (effectiveSwitchDay != null) {
+                    setSwitchDate(format(dayNumberToDate(effectiveSwitchDay, { startDate: new Date(val), challengeLengthDays: challengeLength }), "yyyy-MM-dd"));
+                  }
+                }}
                 aria-label="Challenge start date"
               />
             </label>
@@ -301,10 +373,10 @@ export function Calculator() {
                 aria-label="Challenge length in days"
               >
                 <option value={364}>
-                  364 days ({formatPenceAsGBP(annualTotalPence(364, basePence))})
+                  364 days ({formatPenceAsGBP(annualTotalPence(364, basePence, hasSwitch ? effectiveSwitchDay : null, hasSwitch ? switchBasePence : null))})
                 </option>
                 <option value={365}>
-                  365 days ({formatPenceAsGBP(annualTotalPence(365, basePence))})
+                  365 days ({formatPenceAsGBP(annualTotalPence(365, basePence, hasSwitch ? effectiveSwitchDay : null, hasSwitch ? switchBasePence : null))})
                 </option>
               </select>
             </label>
@@ -314,15 +386,15 @@ export function Calculator() {
           <div className="pt-1 border-t border-border/60">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-muted-foreground">
-                Daily scaling rate (Monzo Extra / Perks / Max)
+                {hasSwitch ? "Starting daily rate" : "Daily scaling rate (Monzo Extra / Perks / Max)"}
               </span>
               <span className="text-xs text-muted-foreground tabular-nums">
-                Day 1: {formatPenceAsGBP(basePence)} · Day {challengeLength}: {formatPenceAsGBP(challengeLength * basePence)}
+                Day 1: {formatPenceAsGBP(basePence)}
               </span>
             </div>
             <div
               role="radiogroup"
-              aria-label="Daily scaling rate multiplier"
+              aria-label="Starting daily scaling rate multiplier"
               className="grid grid-cols-4 gap-2"
             >
               {MULTIPLIER_OPTIONS.map((opt) => {
@@ -357,6 +429,146 @@ export function Calculator() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Mid-challenge rate switch toggle & configuration */}
+          <div className="pt-2 border-t border-border/60">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                id="toggle-rate-switch"
+                checked={hasSwitch}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setHasSwitch(checked);
+                  if (checked && switchDay == null) {
+                    setSwitchDay(91);
+                    setSwitchDayInputStr("91");
+                    setSwitchDate(format(dayNumberToDate(91, { startDate: new Date(challengeStart), challengeLengthDays: challengeLength }), "yyyy-MM-dd"));
+                    if (switchBasePence === basePence) {
+                      setSwitchBasePence(basePence === 1 ? 4 : 1);
+                    }
+                  }
+                }}
+                className="rounded border-input text-primary focus:ring-primary size-4"
+              />
+              <span className="text-xs font-medium text-foreground">
+                Swapped rate mid-challenge? (e.g. upgraded to 4p)
+              </span>
+            </label>
+
+            {hasSwitch && effectiveSwitchDay != null && (
+              <div className="mt-3 space-y-3 pl-4 border-l-2 border-primary/40 transition-all">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="block text-xs">
+                    <span className="font-medium text-foreground block mb-1">
+                      Swap on date
+                    </span>
+                    <Input
+                      type="date"
+                      value={switchDate}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSwitchDate(val);
+                        if (val) {
+                          const d = dateToDayNumber(new Date(val), { startDate: new Date(challengeStart), challengeLengthDays: challengeLength });
+                          if (d != null) {
+                            setSwitchDay(d);
+                            setSwitchDayInputStr(String(d));
+                          }
+                        }
+                      }}
+                      aria-label="Date when daily rate swapped"
+                      className="h-9 text-xs"
+                    />
+                  </label>
+                  <label className="block text-xs">
+                    <span className="font-medium text-foreground block mb-1">
+                      Swap on day number
+                    </span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={challengeLength}
+                      value={switchDayInputStr}
+                      onChange={(e) => {
+                        setSwitchDayInputStr(e.target.value);
+                        const parsed = Number(e.target.value);
+                        if (parsed >= 1 && parsed <= challengeLength) {
+                          setSwitchDay(parsed);
+                          setSwitchDate(format(dayNumberToDate(parsed, { startDate: new Date(challengeStart), challengeLengthDays: challengeLength }), "yyyy-MM-dd"));
+                        }
+                      }}
+                      onBlur={() => {
+                        const parsed = Math.max(1, Math.min(challengeLength, Number(switchDayInputStr) || 1));
+                        setSwitchDay(parsed);
+                        setSwitchDayInputStr(String(parsed));
+                        setSwitchDate(format(dayNumberToDate(parsed, { startDate: new Date(challengeStart), challengeLengthDays: challengeLength }), "yyyy-MM-dd"));
+                      }}
+                      aria-label="Challenge day number when daily rate swapped"
+                      className="h-9 text-xs"
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      New rate from Day {effectiveSwitchDay} ({switchDate}) onwards
+                    </span>
+                    <span className="text-xs font-semibold text-primary">
+                      +{switchBasePence}p/day ({switchBasePence}x)
+                    </span>
+                  </div>
+                  <div
+                    role="radiogroup"
+                    aria-label="New daily rate multiplier"
+                    className="grid grid-cols-4 gap-2"
+                  >
+                    {MULTIPLIER_OPTIONS.map((opt) => {
+                      const isSelected = switchBasePence === opt.basePence;
+                      return (
+                        <button
+                          key={opt.multiplier}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          id={`new-scale-option-${opt.multiplier}`}
+                          onClick={() => setSwitchBasePence(opt.basePence)}
+                          className={cn(
+                            "flex flex-col items-center justify-center py-1.5 px-1 rounded-lg text-xs transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            isSelected
+                              ? "bg-primary text-primary-foreground font-semibold shadow-sm shadow-primary/25 ring-1 ring-primary"
+                              : "bg-background/90 text-foreground border border-input hover:bg-muted/80"
+                          )}
+                        >
+                          <span className="text-xs font-bold tracking-tight">
+                            {opt.label}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-[9px] tracking-tight",
+                              isSelected ? "text-primary-foreground/90 font-medium" : "text-muted-foreground"
+                            )}
+                          >
+                            {opt.tierName}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-md bg-muted/60 p-2.5 text-xs text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+                  <span>
+                    Days 1–{effectiveSwitchDay - 1} at {basePence}p/day → Days {effectiveSwitchDay}–{challengeLength} at {switchBasePence}p/day
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    Year total: {formatPenceAsGBP(annualTotalPence(challengeLength, basePence, effectiveSwitchDay, switchBasePence))}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -499,6 +711,8 @@ export function Calculator() {
               challengeStart={challengeStart}
               challengeLength={challengeLength}
               basePence={basePence}
+              switchDay={hasSwitch ? effectiveSwitchDay : null}
+              switchBasePence={hasSwitch ? switchBasePence : null}
             />
           </TabsContent>
         </Tabs>
@@ -562,6 +776,8 @@ export function Calculator() {
                 firstDay={result.firstDay}
                 lastDay={result.lastDay}
                 basePence={basePence}
+                switchDay={hasSwitch ? effectiveSwitchDay : null}
+                switchBasePence={hasSwitch ? switchBasePence : null}
                 showPenceOnly={showPenceOnly}
                 className="animate-fade-in"
               />
@@ -580,7 +796,9 @@ export function Calculator() {
               <AccordionContent>
                 <p className="text-sm font-mono text-muted-foreground">{formulaExplanation}</p>
                 <p className="text-sm mt-2">
-                  {basePence > 1
+                  {hasSwitch && effectiveSwitchDay != null
+                    ? `On Day ${effectiveSwitchDay} (${switchDate}), the rate changed from ${basePence}p/day to ${switchBasePence}p/day. Days prior are calculated at ${basePence}p/day and days from Day ${effectiveSwitchDay} onwards are calculated at ${switchBasePence}p/day.`
+                    : basePence > 1
                     ? `At a ${basePence}x scale (+${basePence}p more each day), day k = ${basePence}×k pence (Day 1 = ${formatPenceAsGBP(basePence)}, Day 2 = ${formatPenceAsGBP(basePence * 2)}, etc.). The standard arithmetic series sum is scaled by ${basePence}p.`
                     : "The penny challenge uses an arithmetic series: day k = k pence (+1p each day). The sum from day a to day b is (b×(b+1) − (a−1)×a) ÷ 2 pence."}
                 </p>
@@ -660,10 +878,24 @@ function getInterpretation(
     showPenceOnly?: boolean;
     firstDayOffset?: number | null;
     basePence?: number;
+    switchDay?: number | null;
+    switchBasePence?: number | null;
   }
 ): string {
   const fmt = (p: number) => opts.showPenceOnly ? `${p}p` : formatPenceAsGBP(p);
-  const scaleSuffix = opts.basePence && opts.basePence > 1 ? ` (at ${opts.basePence}p/day)` : "";
+  let scaleSuffix = "";
+  if (opts.switchDay != null && opts.switchBasePence != null) {
+    if (r.lastDay < opts.switchDay) {
+      scaleSuffix = ` (at ${opts.basePence ?? 1}p/day)`;
+    } else if (r.firstDay >= opts.switchDay) {
+      scaleSuffix = ` (at ${opts.switchBasePence}p/day)`;
+    } else {
+      scaleSuffix = ` (swapped to ${opts.switchBasePence}p/day on day ${opts.switchDay})`;
+    }
+  } else if (opts.basePence && opts.basePence > 1) {
+    scaleSuffix = ` (at ${opts.basePence}p/day)`;
+  }
+
   if (mode === "month" && opts.month != null && opts.year != null) {
     const monthName = format(new Date(opts.year, opts.month - 1), "MMMM yyyy");
     return `For ${monthName} (days ${r.firstDay}–${r.lastDay}), you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;

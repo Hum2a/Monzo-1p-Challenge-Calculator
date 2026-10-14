@@ -49,6 +49,9 @@ export const shareParamsSchema = z.object({
   challengeLength: z.coerce.number().int().min(364).max(365).optional(),
   basePence: z.coerce.number().int().min(1).max(100).optional(),
   firstDayOffset: z.coerce.number().int().min(1).max(365).optional(),
+  switchDay: z.coerce.number().int().min(1).max(365).optional(),
+  switchDate: dateStringSchema.optional(),
+  switchBasePence: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 export type ShareParams = z.infer<typeof shareParamsSchema>;
@@ -65,6 +68,8 @@ export const emailPrefsSchema = z.object({
   challengeStart: dateStringSchema.nullable().optional(),
   challengeLength: z.union([z.literal(364), z.literal(365)]),
   basePence: z.number().int().min(1).max(100),
+  switchDay: z.number().int().min(1).max(365).nullable().optional(),
+  switchBasePence: z.number().int().min(1).max(100).nullable().optional(),
 });
 
 export type EmailPrefs = z.infer<typeof emailPrefsSchema>;

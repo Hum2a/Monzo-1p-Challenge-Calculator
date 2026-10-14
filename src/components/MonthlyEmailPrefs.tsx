@@ -15,12 +15,16 @@ type Props = {
   challengeStart: string;
   challengeLength: number;
   basePence: number;
+  switchDay?: number | null;
+  switchBasePence?: number | null;
 };
 
 export function MonthlyEmailPrefs({
   challengeStart,
   challengeLength,
   basePence,
+  switchDay,
+  switchBasePence,
 }: Props) {
   const { data: session, status: sessionStatus } = useSession();
   const [enabled, setEnabled] = React.useState(false);
@@ -34,8 +38,10 @@ export function MonthlyEmailPrefs({
       startDate: new Date(challengeStart),
       challengeLengthDays: challengeLength === 365 ? 365 : 364,
       basePence,
+      switchDay,
+      switchBasePence,
     }),
-    [challengeStart, challengeLength, basePence]
+    [challengeStart, challengeLength, basePence, switchDay, switchBasePence]
   );
 
   const preview = React.useMemo(
@@ -106,6 +112,8 @@ export function MonthlyEmailPrefs({
         challengeStart,
         challengeLength: challengeLength === 365 ? 365 : 364,
         basePence,
+        switchDay: switchDay ?? undefined,
+        switchBasePence: switchBasePence ?? undefined,
       };
       const res = await fetch("/api/account/email-prefs", {
         method: "PATCH",

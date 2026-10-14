@@ -11,28 +11,59 @@ import {
 } from "date-fns";
 
 /** Amount in pence for a given day number (1-indexed). Day 1 = 1p. */
-export function amountForDay(dayNumber: number, basePence: number = 1): number {
+export function amountForDay(
+  dayNumber: number,
+  basePence: number = 1,
+  switchDay?: number | null,
+  switchBasePence?: number | null
+): number {
   if (dayNumber < 1) return 0;
-  return Math.round(dayNumber * basePence);
+  const rate =
+    switchDay != null && switchBasePence != null && dayNumber >= switchDay
+      ? switchBasePence
+      : basePence;
+  return Math.round(dayNumber * rate);
 }
 
 /**
  * Sum of amounts from day A to day B (inclusive) using arithmetic series.
- * Sum = (n/2) * (first + last) where n = count, first = day A pence, last = day B pence.
- * Using integers: sum from k=a to b of k = (b*(b+1) - a*(a-1)) / 2
- * For base 1p: sum = (b*(b+1) - (a-1)*a) / 2
+ * Supports an optional mid-challenge rate swap on switchDay to switchBasePence.
  */
 export function sumRangeInPence(
   firstDay: number,
   lastDay: number,
-  basePence: number = 1
+  basePence: number = 1,
+  switchDay?: number | null,
+  switchBasePence?: number | null
 ): number {
   if (firstDay > lastDay) return 0;
   if (firstDay < 1) firstDay = 1;
-  // Sum from 1..lastDay minus sum from 1..(firstDay-1)
-  // Sum 1..n = n*(n+1)/2
-  const sumToN = (n: number) => Math.floor((n * (n + 1)) / 2) * basePence;
-  return sumToN(lastDay) - sumToN(firstDay - 1);
+
+  const sumSimple = (a: number, b: number, rate: number) => {
+    if (a > b) return 0;
+    const sumToN = (n: number) => Math.floor((n * (n + 1)) / 2) * rate;
+    return sumToN(b) - sumToN(a - 1);
+  };
+
+  if (switchDay == null || switchBasePence == null) {
+    return sumSimple(firstDay, lastDay, basePence);
+  }
+
+  // If switchDay is at or before firstDay, the entire range is at switchBasePence
+  if (switchDay <= firstDay) {
+    return sumSimple(firstDay, lastDay, switchBasePence);
+  }
+
+  // If switchDay is after lastDay, the entire range is at basePence
+  if (switchDay > lastDay) {
+    return sumSimple(firstDay, lastDay, basePence);
+  }
+
+  // Range spans across switchDay: [firstDay..switchDay-1] at basePence, [switchDay..lastDay] at switchBasePence
+  return (
+    sumSimple(firstDay, switchDay - 1, basePence) +
+    sumSimple(switchDay, lastDay, switchBasePence)
+  );
 }
 
 export interface MultiplierOption {
@@ -50,18 +81,23 @@ export const MULTIPLIER_OPTIONS: readonly MultiplierOption[] = [
   { multiplier: 4, basePence: 4, label: "4p (4x)", tierName: "Max", description: "+4p/day" },
 ] as const;
 
-/** Total pence for a full challenge year (364 or 365 days) at a given base pence. */
+/** Total pence for a full challenge year (364 or 365 days) at a given base pence (with optional switch). */
 export function annualTotalPence(
   lengthDays: number = 365,
-  basePence: number = 1
+  basePence: number = 1,
+  switchDay?: number | null,
+  switchBasePence?: number | null
 ): number {
-  return Math.floor((lengthDays * (lengthDays + 1)) / 2) * basePence;
+  return sumRangeInPence(1, lengthDays, basePence, switchDay, switchBasePence);
 }
 
 export interface ChallengeConfig {
   startDate: Date;
   challengeLengthDays: number; // 364 or 365
   basePence?: number;
+  switchDay?: number | null;
+  switchDate?: string | null;
+  switchBasePence?: number | null;
 }
 
 /** Convert a calendar date to a day number (1-indexed) within the challenge. */
@@ -98,36 +134,51 @@ export interface RangeResult {
 export function computeRange(
   firstDay: number,
   lastDay: number,
-  basePence: number = 1
+  basePence: number = 1,
+  switchDay?: number | null,
+  switchBasePence?: number | null
 ): RangeResult {
   const clampedFirst = Math.max(1, firstDay);
   const clampedLast = Math.max(clampedFirst, lastDay);
   const dayCount = clampedLast - clampedFirst + 1;
-  const totalPence = sumRangeInPence(clampedFirst, clampedLast, basePence);
+  const totalPence = sumRangeInPence(
+    clampedFirst,
+    clampedLast,
+    basePence,
+    switchDay,
+    switchBasePence
+  );
   return {
     firstDay: clampedFirst,
     lastDay: clampedLast,
     dayCount,
     totalPence,
-    firstDayPence: amountForDay(clampedFirst, basePence),
-    lastDayPence: amountForDay(clampedLast, basePence),
+    firstDayPence: amountForDay(clampedFirst, basePence, switchDay, switchBasePence),
+    lastDayPence: amountForDay(clampedLast, basePence, switchDay, switchBasePence),
   };
 }
 
 /**
- * Get daily amounts for a range (for breakdown). Returns array of [dayNumber, pence].
+ * Get daily amounts for a range (for breakdown). Returns array of { day, pence, isSwitchDay }.
  * Virtualized-friendly: can be sliced for long ranges.
  */
 export function getDailyAmounts(
   firstDay: number,
   lastDay: number,
-  basePence: number = 1
-): Array<{ day: number; pence: number }> {
-  const result: Array<{ day: number; pence: number }> = [];
+  basePence: number = 1,
+  switchDay?: number | null,
+  switchBasePence?: number | null
+): Array<{ day: number; pence: number; isSwitchDay?: boolean }> {
+  const result: Array<{ day: number; pence: number; isSwitchDay?: boolean }> = [];
   const start = Math.max(1, firstDay);
   const end = Math.max(start, lastDay);
+  const hasSwitch = switchDay != null && switchBasePence != null;
   for (let d = start; d <= end; d++) {
-    result.push({ day: d, pence: amountForDay(d, basePence) });
+    result.push({
+      day: d,
+      pence: amountForDay(d, basePence, switchDay, switchBasePence),
+      ...(hasSwitch ? { isSwitchDay: d === switchDay } : {}),
+    });
   }
   return result;
 }
@@ -143,7 +194,13 @@ export function computeNextNDays(
   const firstDay = dateToDayNumber(fromDate, config);
   if (firstDay === null) return null;
   const lastDay = Math.min(firstDay + numDays - 1, config.challengeLengthDays);
-  return computeRange(firstDay, lastDay, config.basePence ?? 1);
+  return computeRange(
+    firstDay,
+    lastDay,
+    config.basePence ?? 1,
+    config.switchDay,
+    config.switchBasePence
+  );
 }
 
 /**
@@ -162,11 +219,29 @@ export function computeForMonth(
 
   if (firstDay === null && lastDay === null) return null;
   if (firstDay !== null && lastDay === null)
-    return computeRange(firstDay, config.challengeLengthDays, config.basePence ?? 1);
+    return computeRange(
+      firstDay,
+      config.challengeLengthDays,
+      config.basePence ?? 1,
+      config.switchDay,
+      config.switchBasePence
+    );
   if (firstDay === null && lastDay !== null)
-    return computeRange(1, lastDay, config.basePence ?? 1);
+    return computeRange(
+      1,
+      lastDay,
+      config.basePence ?? 1,
+      config.switchDay,
+      config.switchBasePence
+    );
 
-  return computeRange(firstDay!, lastDay!, config.basePence ?? 1);
+  return computeRange(
+    firstDay!,
+    lastDay!,
+    config.basePence ?? 1,
+    config.switchDay,
+    config.switchBasePence
+  );
 }
 
 /**
@@ -180,7 +255,13 @@ export function computeCustomRange(
   const firstDay = dateToDayNumber(startDate, config);
   const lastDay = dateToDayNumber(endDate, config);
   if (firstDay === null || lastDay === null) return null;
-  return computeRange(firstDay, lastDay, config.basePence ?? 1);
+  return computeRange(
+    firstDay,
+    lastDay,
+    config.basePence ?? 1,
+    config.switchDay,
+    config.switchBasePence
+  );
 }
 
 /**
@@ -192,7 +273,13 @@ export function totalSavedUpTo(
 ): RangeResult | null {
   const lastDay = dateToDayNumber(upToDate, config);
   if (lastDay === null) return null;
-  return computeRange(1, lastDay, config.basePence ?? 1);
+  return computeRange(
+    1,
+    lastDay,
+    config.basePence ?? 1,
+    config.switchDay,
+    config.switchBasePence
+  );
 }
 
 /**
@@ -203,3 +290,4 @@ export function formatPenceAsGBP(pence: number): string {
   const p = pence % 100;
   return `£${pounds}.${p.toString().padStart(2, "0")}`;
 }
+

@@ -235,3 +235,71 @@ describe("scaling multipliers (up to 4p/day)", () => {
   });
 });
 
+describe("mid-challenge rate swapping (e.g. 1p to 4p on day X)", () => {
+  it("amountForDay switches on exact switchDay", () => {
+    // Switch on day 90 from 1p to 4p
+    expect(amountForDay(89, 1, 90, 4)).toBe(89);
+    expect(amountForDay(90, 1, 90, 4)).toBe(360); // 90 * 4 = 360p
+    expect(amountForDay(91, 1, 90, 4)).toBe(364); // 91 * 4 = 364p
+  });
+
+  it("sumRangeInPence handles range before, across, and after switchDay", () => {
+    // Switch on day 10 from 1p to 4p
+    // Range entirely before switch (days 1-5): 1+2+3+4+5 = 15p
+    expect(sumRangeInPence(1, 5, 1, 10, 4)).toBe(15);
+
+    // Range entirely after switch (days 10-12): 40 + 44 + 48 = 132p
+    expect(sumRangeInPence(10, 12, 1, 10, 4)).toBe(132);
+
+    // Range crossing switch (days 8-11):
+    // Days 8-9 at 1p = 8 + 9 = 17p
+    // Days 10-11 at 4p = 40 + 44 = 84p
+    // Total = 17 + 84 = 101p
+    expect(sumRangeInPence(8, 11, 1, 10, 4)).toBe(101);
+  });
+
+  it("annual total correctly reflects swapping from 1p to 4p on day 91", () => {
+    // Days 1..90 at 1p = (90*91)/2 = 4,095p = £40.95
+    // Days 91..365 at 4p = 4 * ((365*366/2) - (90*91/2)) = 4 * (66795 - 4095) = 4 * 62700 = 250,800p = £2,508.00
+    // Total = 4,095 + 250,800 = 254,895p = £2,548.95
+    const total = annualTotalPence(365, 1, 91, 4);
+    expect(total).toBe(254895);
+    expect(formatPenceAsGBP(total)).toBe("£2548.95");
+  });
+
+  it("computeForMonth splits month when switch occurs mid-month", () => {
+    // 2026 challenge starts Jan 1. March is days 60-90.
+    // Switch occurs on Day 74 (March 15) from 1p to 4p.
+    const config: ChallengeConfig = {
+      startDate: new Date(2026, 0, 1),
+      challengeLengthDays: 365,
+      basePence: 1,
+      switchDay: 74,
+      switchBasePence: 4,
+    };
+    const march = computeForMonth(3, 2026, config);
+    expect(march).not.toBeNull();
+    expect(march!.firstDay).toBe(60);
+    expect(march!.lastDay).toBe(90);
+    expect(march!.firstDayPence).toBe(60); // Day 60 is before Day 74: 60 * 1 = 60p
+    expect(march!.lastDayPence).toBe(360); // Day 90 is after Day 74: 90 * 4 = 360p
+
+    // Days 60-73 at 1p: (73*74 - 59*60)/2 = (5402 - 3540)/2 = 931p
+    // Days 74-90 at 4p: 4 * ((90*91 - 73*74)/2) = 4 * (8190 - 5402)/2 = 4 * 1394 = 5576p
+    // Total March = 931 + 5576 = 6507p (£65.07)
+    expect(march!.totalPence).toBe(6507);
+    expect(formatPenceAsGBP(march!.totalPence)).toBe("£65.07");
+  });
+
+  it("getDailyAmounts tags switch day with isSwitchDay", () => {
+    const daily = getDailyAmounts(88, 92, 1, 90, 4);
+    expect(daily).toHaveLength(5);
+    expect(daily[0]).toEqual({ day: 88, pence: 88, isSwitchDay: false });
+    expect(daily[1]).toEqual({ day: 89, pence: 89, isSwitchDay: false });
+    expect(daily[2]).toEqual({ day: 90, pence: 360, isSwitchDay: true });
+    expect(daily[3]).toEqual({ day: 91, pence: 364, isSwitchDay: false });
+    expect(daily[4]).toEqual({ day: 92, pence: 368, isSwitchDay: false });
+  });
+});
+
+

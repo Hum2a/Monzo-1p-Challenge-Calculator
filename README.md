@@ -96,6 +96,7 @@ npm run cron:trigger -- https://monzo-1p-challenge-calculator.online
 
 - **Day 1** = 1p (or $M$ pence at $M\times$ scale), **Day k** = $k \times M$ pence  
 - **Sum days a to b:** $[(b(b+1) − (a−1)a) / 2] \times M$ pence  
+- **Mid-challenge rate swapping:** Supports changing multipliers on any day or date (e.g. 1p/day up to day 89, then 4p/day from day 90 onwards) with exact piecewise arithmetic series.  
 - **Integer pence only**—no floats
 
 ### Scaling Multipliers (Monzo Extra / Perks / Max)

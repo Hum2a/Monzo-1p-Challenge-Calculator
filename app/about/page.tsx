@@ -59,9 +59,17 @@ export default function AboutPage() {
               </li>
             </ul>
             <p>
+              <strong className="text-foreground">Swapping rates mid-challenge:</strong>{" "}
+              If you upgrade your Monzo plan or switch your multiplier halfway through the year
+              (e.g. from 1p/day to 4p/day on Day 90), you can select that exact day or date.
+              The calculator accounts for your initial rate up to the swap date and scales your daily deposits
+              at the new rate from then on.
+            </p>
+            <p>
               <strong className="text-foreground">Flexibility:</strong> Many
               people adapt the challenge to fit their schedule. You can start on
               any date, choose 364 or 365 days, select your preferred daily scale (1x–4x),
+              swap rates mid-year if your savings goal changes,
               and use this calculator to plan how much to deposit for a specific month or date range.
             </p>
             <p>
