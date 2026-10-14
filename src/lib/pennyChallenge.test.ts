@@ -11,6 +11,12 @@ import {
   formatPenceAsGBP,
   annualTotalPence,
   MULTIPLIER_OPTIONS,
+  getAllMonthsBreakdown,
+  computeForMonths,
+  resolvePreset,
+  computeBudgetStats,
+  generateBreakdownCSV,
+  BUDGET_PRESETS,
   type ChallengeConfig,
 } from "./pennyChallenge";
 
@@ -300,6 +306,163 @@ describe("mid-challenge rate swapping (e.g. 1p to 4p on day X)", () => {
     expect(daily[3]).toEqual({ day: 91, pence: 364, isSwitchDay: false });
     expect(daily[4]).toEqual({ day: 92, pence: 368, isSwitchDay: false });
   });
+
+  it("getDailyAmounts attaches date and rate info when config is passed", () => {
+    const config: ChallengeConfig = {
+      startDate: new Date(2026, 0, 1),
+      challengeLengthDays: 365,
+      basePence: 1,
+      switchDay: 90,
+      switchBasePence: 4,
+    };
+    const rows = getDailyAmounts(89, 91, 1, 90, 4, config);
+    expect(rows).toHaveLength(3);
+    expect(rows[0].day).toBe(89);
+    expect(rows[0].rate).toBe(1);
+    expect(rows[0].dateStr).toBe("2026-03-30");
+    expect(rows[1].day).toBe(90);
+    expect(rows[1].rate).toBe(4);
+    expect(rows[1].isSwitchDay).toBe(true);
+    expect(rows[1].dateStr).toBe("2026-03-31");
+  });
 });
+
+describe("getAllMonthsBreakdown & computeForMonths", () => {
+  const config2026: ChallengeConfig = {
+    startDate: new Date(2026, 0, 1),
+    challengeLengthDays: 365,
+    basePence: 1,
+  };
+
+  it("returns 12 months for standard calendar year", () => {
+    const months = getAllMonthsBreakdown(config2026);
+    expect(months).toHaveLength(12);
+    expect(months[0].monthName).toBe("January");
+    expect(months[0].firstDay).toBe(1);
+    expect(months[0].lastDay).toBe(31);
+    expect(months[0].dayCount).toBe(31);
+    expect(months[0].totalPence).toBe(496); // (31*32)/2 = 496p (£4.96)
+    expect(months[0].cumulativePence).toBe(496);
+
+    expect(months[11].monthName).toBe("December");
+    expect(months[11].firstDay).toBe(335);
+    expect(months[11].lastDay).toBe(365);
+    expect(months[11].cumulativePence).toBe(66795);
+  });
+
+  it("calculates months with mid-challenge rate swap", () => {
+    const swapConfig: ChallengeConfig = {
+      startDate: new Date(2026, 0, 1),
+      challengeLengthDays: 365,
+      basePence: 1,
+      switchDay: 91, // April 1 (Day 91)
+      switchBasePence: 4,
+    };
+    const months = getAllMonthsBreakdown(swapConfig);
+    expect(months).toHaveLength(12);
+    // Q1 (Jan, Feb, Mar) at 1p
+    expect(months[0].hasRateSwitch).toBe(false);
+    expect(months[1].hasRateSwitch).toBe(false);
+    expect(months[2].hasRateSwitch).toBe(false);
+    // April (Days 91-120) starts with the rate swap on Day 91
+    expect(months[3].hasRateSwitch).toBe(true);
+    expect(months[3].activeRates).toEqual([1, 4]);
+    // May onwards entirely at 4p
+    expect(months[4].hasRateSwitch).toBe(false);
+    expect(months[4].activeRates).toEqual([4]);
+  });
+
+  it("computeForMonths computes multi-month totals for Q4 (Oct, Nov, Dec)", () => {
+    const q4Result = computeForMonths([10, 11, 12], 2026, config2026);
+    expect(q4Result).not.toBeNull();
+    expect(q4Result!.months).toEqual([10, 11, 12]);
+    expect(q4Result!.monthBreakdowns).toHaveLength(3);
+    expect(q4Result!.dayCount).toBe(31 + 30 + 31); // 92 days
+    expect(q4Result!.firstDay).toBe(274); // Oct 1 = Day 274
+    expect(q4Result!.lastDay).toBe(365); // Dec 31 = Day 365
+    // Sum of Oct + Nov + Dec at 1p
+    const octNovDecSum = sumRangeInPence(274, 365, 1);
+    expect(q4Result!.totalPence).toBe(octNovDecSum);
+  });
+});
+
+describe("resolvePreset", () => {
+  it("BUDGET_PRESETS contains expected default options", () => {
+    expect(BUDGET_PRESETS.length).toBeGreaterThan(0);
+    expect(BUDGET_PRESETS.some((p) => p.id === "next-7")).toBe(true);
+    expect(BUDGET_PRESETS.some((p) => p.id === "christmas-countdown")).toBe(true);
+  });
+
+  const config2026: ChallengeConfig = {
+    startDate: new Date(2026, 0, 1),
+    challengeLengthDays: 365,
+    basePence: 1,
+  };
+
+  it("resolves next-7 days from reference date", () => {
+    const ref = new Date(2026, 5, 10); // Day 161 (June 10)
+    const preset = resolvePreset("next-7", config2026, ref);
+    expect(preset).not.toBeNull();
+    expect(preset!.label).toBe("Next 7 Days");
+    expect(preset!.firstDay).toBe(161);
+    expect(preset!.lastDay).toBe(167);
+    expect(preset!.result.dayCount).toBe(7);
+    expect(preset!.result.totalPence).toBe(sumRangeInPence(161, 167, 1));
+  });
+
+  it("resolves christmas-countdown preset (Nov 1 - Dec 31)", () => {
+    const preset = resolvePreset("christmas-countdown", config2026);
+    expect(preset).not.toBeNull();
+    expect(preset!.firstDay).toBe(305); // Nov 1 = Day 305
+    expect(preset!.lastDay).toBe(365); // Dec 31 = Day 365
+    expect(preset!.result.dayCount).toBe(61);
+  });
+
+  it("resolves rest-of-challenge preset", () => {
+    const ref = new Date(2026, 9, 1); // Oct 1 = Day 274
+    const preset = resolvePreset("rest-of-challenge", config2026, ref);
+    expect(preset).not.toBeNull();
+    expect(preset!.firstDay).toBe(274);
+    expect(preset!.lastDay).toBe(365);
+    expect(preset!.result.dayCount).toBe(92);
+  });
+});
+
+describe("computeBudgetStats", () => {
+  it("calculates peak day, lowest day, daily and weekly averages", () => {
+    const config: ChallengeConfig = {
+      startDate: new Date(2026, 0, 1),
+      challengeLengthDays: 365,
+      basePence: 2,
+    };
+    const stats = computeBudgetStats(1, 30, config);
+    expect(stats.dayCount).toBe(30);
+    expect(stats.lowestDay).toBe(1);
+    expect(stats.lowestDayPence).toBe(2); // Day 1 * 2p = 2p
+    expect(stats.peakDay).toBe(30);
+    expect(stats.peakDayPence).toBe(60); // Day 30 * 2p = 60p
+    expect(stats.totalPence).toBe(sumRangeInPence(1, 30, 2));
+    expect(stats.avgDailyPence).toBe(Math.round(sumRangeInPence(1, 30, 2) / 30));
+    expect(stats.avgWeeklyPence).toBe(stats.avgDailyPence * 7);
+  });
+});
+
+describe("generateBreakdownCSV", () => {
+  it("produces valid CSV formatted lines", () => {
+    const config: ChallengeConfig = {
+      startDate: new Date(2026, 0, 1),
+      challengeLengthDays: 365,
+      basePence: 1,
+    };
+    const rows = getDailyAmounts(1, 3, 1, null, null, config);
+    const csv = generateBreakdownCSV(rows, config);
+    const lines = csv.split("\n");
+    expect(lines[0]).toBe("Day Number,Date,Daily Deposit,Cumulative Saved,Daily Rate Tier");
+    expect(lines[1]).toContain("1,2026-01-01,£0.01,£0.01,1p/day (+1p)");
+    expect(lines[2]).toContain("2,2026-01-02,£0.02,£0.03,1p/day (+1p)");
+    expect(lines[3]).toContain("3,2026-01-03,£0.03,£0.06,1p/day (+1p)");
+  });
+});
+
 
 

@@ -42,6 +42,10 @@ export const shareParamsSchema = z.object({
   mode: modeSchema.optional().default("next-n"),
   n: z.coerce.number().int().min(1).max(365).optional(),
   month: z.coerce.number().int().min(1).max(12).optional(),
+  months: z.union([
+    z.string().transform((s) => s.split(",").map(Number).filter((n) => n >= 1 && n <= 12)),
+    z.array(z.coerce.number().int().min(1).max(12)),
+  ]).optional(),
   year: z.coerce.number().int().min(MIN_YEAR).max(MAX_YEAR).optional(),
   start: dateStringSchema.optional(),
   end: dateStringSchema.optional(),

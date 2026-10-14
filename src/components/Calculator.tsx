@@ -14,6 +14,11 @@ import {
   dateToDayNumber,
   dayNumberToDate,
   sumRangeInPence,
+  computeForMonths,
+  computeBudgetStats,
+  resolvePreset,
+  BUDGET_PRESETS,
+  type BudgetPresetId,
   type ChallengeConfig,
   type RangeResult,
 } from "@/lib/pennyChallenge";
@@ -75,6 +80,9 @@ export function Calculator() {
   const [tab, setTab] = React.useState<TabValue>("next-n");
   const [n, setN] = React.useState(30);
   const [month, setMonth] = React.useState(new Date().getMonth() + 1);
+  const [selectedMonths, setSelectedMonths] = React.useState<number[]>([new Date().getMonth() + 1]);
+  const [isMultiMonth, setIsMultiMonth] = React.useState(false);
+  const [activePreset, setActivePreset] = React.useState<BudgetPresetId | null>(null);
   const [year, setYear] = React.useState(currentYear);
   const [fromDate, setFromDate] = React.useState(todayStr());
   const [customStart, setCustomStart] = React.useState(todayStr());
@@ -114,7 +122,14 @@ export function Calculator() {
       setTab(merged.mode as Mode);
     }
     if (merged.n != null) setN(merged.n);
-    if (merged.month != null) setMonth(merged.month);
+    if (merged.months && Array.isArray(merged.months) && merged.months.length > 0) {
+      setSelectedMonths(merged.months);
+      setIsMultiMonth(merged.months.length > 1);
+      setMonth(merged.months[0]);
+    } else if (merged.month != null) {
+      setMonth(merged.month);
+      setSelectedMonths([merged.month]);
+    }
     if (merged.year != null) setYear(merged.year);
     if (merged.start) setFromDate(merged.start);
     if (merged.start) setCustomStart(merged.start);
@@ -187,6 +202,9 @@ export function Calculator() {
       return computeNextNDays(new Date(fromDate), n, config);
     }
     if (mode === "month") {
+      if (isMultiMonth && selectedMonths.length > 0) {
+        return computeForMonths(selectedMonths, year, config);
+      }
       return computeForMonth(month, year, config);
     }
     return computeCustomRange(
@@ -194,13 +212,30 @@ export function Calculator() {
       new Date(customEnd),
       config
     );
-  }, [mode, n, fromDate, month, year, customStart, customEnd, config, effectiveDayOffset, basePence]);
+  }, [mode, n, fromDate, month, year, customStart, customEnd, config, effectiveDayOffset, basePence, isMultiMonth, selectedMonths]);
+
+  const budgetStats = React.useMemo(() => {
+    if (!result) return null;
+    return computeBudgetStats(result.firstDay, result.lastDay, config);
+  }, [result, config]);
+
+  const handleSelectPreset = (presetId: BudgetPresetId) => {
+    const resolution = resolvePreset(presetId, config, new Date());
+    if (!resolution) return;
+    setActivePreset(presetId);
+    setMode("custom");
+    setTab("custom");
+    setCustomStart(format(resolution.startDate, "yyyy-MM-dd"));
+    setCustomEnd(format(resolution.endDate, "yyyy-MM-dd"));
+    setFirstDayOffset(null);
+  };
 
   const shareParams: ShareParams = React.useMemo(
     () => ({
       mode,
       n: mode === "next-n" ? n : undefined,
-      month: mode === "month" ? month : undefined,
+      month: mode === "month" && !isMultiMonth ? month : undefined,
+      months: mode === "month" && isMultiMonth && selectedMonths.length > 1 ? selectedMonths : undefined,
       year: mode === "month" ? year : undefined,
       start: mode === "next-n" && firstDayOffset == null ? fromDate : mode === "custom" ? customStart : undefined,
       end: mode === "custom" ? customEnd : undefined,
@@ -212,7 +247,7 @@ export function Calculator() {
       switchDate: hasSwitch && switchDate ? switchDate : undefined,
       switchBasePence: hasSwitch ? switchBasePence : undefined,
     }),
-    [mode, n, fromDate, month, year, customStart, customEnd, challengeStart, challengeLength, basePence, effectiveDayOffset, firstDayOffset, hasSwitch, effectiveSwitchDay, switchDate, switchBasePence]
+    [mode, n, fromDate, month, selectedMonths, isMultiMonth, year, customStart, customEnd, challengeStart, challengeLength, basePence, effectiveDayOffset, firstDayOffset, hasSwitch, effectiveSwitchDay, switchDate, switchBasePence]
   );
 
   React.useEffect(() => {
@@ -314,6 +349,9 @@ export function Calculator() {
     n, fromDate, month, year, customStart, customEnd, showPenceOnly, firstDayOffset: effectiveDayOffset, basePence,
     switchDay: hasSwitch ? effectiveSwitchDay : null,
     switchBasePence: hasSwitch ? switchBasePence : null,
+    isMultiMonth,
+    selectedMonths,
+    activePreset,
   }) : null;
 
   const formulaExplanation = result
@@ -572,6 +610,45 @@ export function Calculator() {
           </div>
         </div>
 
+        {/* Quick Budget Presets Ribbon */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Quick Budget Presets
+            </span>
+            {activePreset && (
+              <button
+                type="button"
+                onClick={() => setActivePreset(null)}
+                className="text-[11px] text-primary hover:underline cursor-pointer"
+              >
+                Reset preset
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {BUDGET_PRESETS.map((p) => {
+              const isSelected = activePreset === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => handleSelectPreset(p.id)}
+                  title={p.description}
+                  className={cn(
+                    "shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer border",
+                    isSelected
+                      ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs"
+                      : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border-border/60"
+                  )}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <Tabs
           value={tab}
           onValueChange={(v: string) => {
@@ -599,6 +676,7 @@ export function Calculator() {
                     const checked = e.target.checked;
                     setFirstDayOffset(checked ? 1 : null);
                     if (checked) setDayInputStr("1");
+                    setActivePreset(null);
                   }}
                   aria-label="I'm on a specific day number"
                 />
@@ -612,7 +690,10 @@ export function Calculator() {
                     min={1}
                     max={365}
                     value={dayInputStr}
-                    onChange={(e) => setDayInputStr(e.target.value)}
+                    onChange={(e) => {
+                      setDayInputStr(e.target.value);
+                      setActivePreset(null);
+                    }}
                     onBlur={() => {
                       const parsed = dayInputStr === "" ? 1 : Math.max(1, Math.min(365, Number(dayInputStr) || 1));
                       setFirstDayOffset(parsed);
@@ -628,7 +709,10 @@ export function Calculator() {
                 <Input
                   type="date"
                   value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
+                  onChange={(e) => {
+                    setFromDate(e.target.value);
+                    setActivePreset(null);
+                  }}
                   className="mt-1"
                   aria-label="Start from date"
                 />
@@ -641,7 +725,10 @@ export function Calculator() {
                   min={1}
                   max={365}
                   value={n}
-                  onChange={(e) => setN(Number(e.target.value) || 1)}
+                  onChange={(e) => {
+                    setN(Number(e.target.value) || 1);
+                    setActivePreset(null);
+                  }}
                   className="mt-1"
                   aria-label="Number of days"
                 />
@@ -651,21 +738,150 @@ export function Calculator() {
 
           <TabsContent value="month" aria-labelledby="tab-month">
             <div className="space-y-3">
-              <label className="block">
-                <span className="text-sm font-medium">Month</span>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 transition-colors duration-200"
-                  value={month}
-                  onChange={(e) => setMonth(Number(e.target.value))}
-                  aria-label="Month"
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                    <option key={m} value={m}>
-                      {format(new Date(2000, m - 1), "MMMM")}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {/* Single Month vs Multi-Month Selector */}
+              <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                <span className="text-xs font-medium text-muted-foreground">Month Selection</span>
+                <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMultiMonth(false);
+                      setActivePreset(null);
+                    }}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md transition-all cursor-pointer",
+                      !isMultiMonth ? "bg-background font-semibold shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Single Month
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMultiMonth(true);
+                      if (!selectedMonths.includes(month)) {
+                        setSelectedMonths([month]);
+                      }
+                      setActivePreset(null);
+                    }}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md transition-all cursor-pointer",
+                      isMultiMonth ? "bg-background font-semibold shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Multi-Month
+                  </button>
+                </div>
+              </div>
+
+              {!isMultiMonth ? (
+                <label className="block">
+                  <span className="text-sm font-medium">Month</span>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 transition-colors duration-200"
+                    value={month}
+                    onChange={(e) => {
+                      const m = Number(e.target.value);
+                      setMonth(m);
+                      setSelectedMonths([m]);
+                      setActivePreset(null);
+                    }}
+                    aria-label="Month"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                      <option key={m} value={m}>
+                        {format(new Date(2000, m - 1), "MMMM")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <div className="space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
+                    <span className="font-medium text-muted-foreground">
+                      Select months ({selectedMonths.length} active):
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonths([1, 2, 3])}
+                        className="px-1.5 py-0.5 text-[10px] bg-muted hover:bg-muted/80 rounded transition-colors cursor-pointer"
+                      >
+                        Q1
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonths([4, 5, 6])}
+                        className="px-1.5 py-0.5 text-[10px] bg-muted hover:bg-muted/80 rounded transition-colors cursor-pointer"
+                      >
+                        Q2
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonths([7, 8, 9])}
+                        className="px-1.5 py-0.5 text-[10px] bg-muted hover:bg-muted/80 rounded transition-colors cursor-pointer"
+                      >
+                        Q3
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonths([10, 11, 12])}
+                        className="px-1.5 py-0.5 text-[10px] bg-muted hover:bg-muted/80 rounded transition-colors font-medium text-primary cursor-pointer"
+                      >
+                        Q4 (Holiday)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const curM = new Date().getMonth() + 1;
+                          setSelectedMonths(Array.from({ length: 12 - curM + 1 }, (_, i) => curM + i));
+                        }}
+                        className="px-1.5 py-0.5 text-[10px] bg-muted hover:bg-muted/80 rounded transition-colors cursor-pointer"
+                      >
+                        Remaining
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonths(Array.from({ length: 12 }, (_, i) => i + 1))}
+                        className="px-1.5 py-0.5 text-[10px] bg-muted hover:bg-muted/80 rounded transition-colors cursor-pointer"
+                      >
+                        All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
+                      const isSelected = selectedMonths.includes(m);
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => {
+                            setSelectedMonths((prev) =>
+                              isSelected
+                                ? prev.length > 1
+                                  ? prev.filter((x) => x !== m)
+                                  : prev
+                                : [...prev, m].sort((a, b) => a - b)
+                            );
+                            setActivePreset(null);
+                          }}
+                          className={cn(
+                            "py-1.5 px-2 text-xs font-semibold rounded-md border text-center transition-all cursor-pointer",
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold"
+                              : "bg-background/90 text-foreground border-input hover:bg-muted/80"
+                          )}
+                        >
+                          {format(new Date(2000, m - 1), "MMM")}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <label className="block">
                 <span className="text-sm font-medium">Year</span>
                 <Input
@@ -673,7 +889,10 @@ export function Calculator() {
                   min={2020}
                   max={2100}
                   value={year}
-                  onChange={(e) => setYear(Number(e.target.value) || currentYear)}
+                  onChange={(e) => {
+                    setYear(Number(e.target.value) || currentYear);
+                    setActivePreset(null);
+                  }}
                   className="mt-1"
                   aria-label="Year"
                 />
@@ -770,6 +989,14 @@ export function Calculator() {
               </dd>
               <dt className="text-muted-foreground">Days</dt>
               <dd className="font-medium">{result.dayCount}</dd>
+              {budgetStats && (
+                <>
+                  <dt className="text-muted-foreground">Daily average</dt>
+                  <dd className="font-medium tabular-nums">
+                    {showPenceOnly ? `${budgetStats.avgDailyPence}p` : formatPenceAsGBP(budgetStats.avgDailyPence)} / day
+                  </dd>
+                </>
+              )}
             </dl>
             {showBreakdown && (
               <DailyBreakdown
@@ -779,6 +1006,16 @@ export function Calculator() {
                 switchDay={hasSwitch ? effectiveSwitchDay : null}
                 switchBasePence={hasSwitch ? switchBasePence : null}
                 showPenceOnly={showPenceOnly}
+                config={config}
+                onSelectMonth={(m, y) => {
+                  setMode("month");
+                  setTab("month");
+                  setMonth(m);
+                  setYear(y);
+                  setSelectedMonths([m]);
+                  setIsMultiMonth(false);
+                  setActivePreset(null);
+                }}
                 className="animate-fade-in"
               />
             )}
@@ -880,6 +1117,9 @@ function getInterpretation(
     basePence?: number;
     switchDay?: number | null;
     switchBasePence?: number | null;
+    isMultiMonth?: boolean;
+    selectedMonths?: number[];
+    activePreset?: BudgetPresetId | null;
   }
 ): string {
   const fmt = (p: number) => opts.showPenceOnly ? `${p}p` : formatPenceAsGBP(p);
@@ -896,9 +1136,24 @@ function getInterpretation(
     scaleSuffix = ` (at ${opts.basePence}p/day)`;
   }
 
-  if (mode === "month" && opts.month != null && opts.year != null) {
-    const monthName = format(new Date(opts.year, opts.month - 1), "MMMM yyyy");
-    return `For ${monthName} (days ${r.firstDay}–${r.lastDay}), you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;
+  if (opts.activePreset) {
+    const preset = BUDGET_PRESETS.find((p) => p.id === opts.activePreset);
+    if (preset) {
+      return `For ${preset.label} (${r.dayCount} days, days ${r.firstDay}–${r.lastDay}), you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;
+    }
+  }
+
+  if (mode === "month") {
+    if (opts.isMultiMonth && opts.selectedMonths && opts.selectedMonths.length > 1) {
+      const monthNames = opts.selectedMonths
+        .map((m) => format(new Date(2000, m - 1), "MMM"))
+        .join(", ");
+      return `For ${monthNames} ${opts.year ?? ""} (${r.dayCount} days, days ${r.firstDay}–${r.lastDay}), you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;
+    }
+    if (opts.month != null && opts.year != null) {
+      const monthName = format(new Date(opts.year, opts.month - 1), "MMMM yyyy");
+      return `For ${monthName} (days ${r.firstDay}–${r.lastDay}), you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;
+    }
   }
   if (mode === "next-n") {
     if (opts.firstDayOffset != null) {

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Quick Budget Presets Ribbon**: Added one-click financial presets (*Rest of Month*, *Next Month*, *Next 7 / 14 / 30 Days*, *Christmas / Q4*, and *Rest of Year*) for rapid forward planning.
+- **Multi-Month Selection & Budgeting**: Added ability to select multiple specific months simultaneously (e.g. Q4 / Christmas holiday budgeting) with quick quarter pills (`Q1`, `Q2`, `Q3`, `Q4`, `Remaining`, `All`) and live aggregated totals.
+- **Interactive 3-Tab Breakdown Container**:
+  - *Daily Schedule*: Itemized daily list featuring calendar dates alongside challenge day numbers, real-time search/filtering, quick jump buttons (*Today*, *Rate Switch*), and rate tier tags.
+  - *12-Month Roadmap*: Comprehensive month-by-month financial projection table showing days count, monthly deposits, cumulative challenge savings, peak day, and share of annual target with visual progress bars.
+  - *Budget Stats*: Detailed financial analytics including daily average cost, weekly deposit equivalent, lowest deposit day, peak deposit day, and split impact metrics for rate switches.
+- **Breakdown Exports & Sharing**: Added one-click formatted summary copy to clipboard and `.csv` spreadsheet export for spreadsheet budgeting.
 - **Daily scaling multipliers (up to 4p/day)**: Added support for Monzo's scaling options (1x, 2x, 3x, 4x tiers), allowing users to scale daily savings up to 4p more each day (£2,671.80 for 365 days / £2,657.20 for 364 days).
 - **Mid-challenge rate swapping**: Added support for swapping the savings rate mid-challenge (e.g. switching from 1p to 4p on a random day or calendar date), with exact piecewise arithmetic accounting for the change from that day onward.
 - **Bi-directional date & day selector**: Synchronized date picker and day number input allowing users to pick the switch day either by calendar date or challenge day number (1–366).
@@ -17,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Interactive multiplier selector**: Added accessible 4-pill selector (`1p (1x)`, `2p (2x)`, `3p (3x)`, `4p (4x)`) in Challenge Settings with dynamic Day 1, Day 365, and annual total previews.
 - **Dynamic challenge length totals**: Challenge length selector dynamically calculates and shows annual targets for the chosen scale tier and rate switch.
 - **Scaled monthly email notifications**: Included multiplier/scale badges and rate swap info in monthly transfer reminder emails.
-- **Unit test suite expansion**: Added comprehensive test coverage for 1x through 4x multiplier arithmetic, mid-challenge rate swapping, annual totals, and email templates.
+- **Unit test suite expansion**: Added comprehensive test coverage for 1x through 4x multiplier arithmetic, mid-challenge rate swapping, multi-month budgeting, preset date resolution, and email templates (62 passing tests).
 
 ### Fixed
 
