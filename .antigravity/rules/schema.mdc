@@ -1,0 +1,20 @@
+---
+description: Validation schemas and data contracts
+globs: "**/validation*.ts"
+alwaysApply: false
+---
+
+# Schema & Validation
+
+## Zod
+- All external input validated with Zod
+- Schemas in `src/lib/validation.ts`
+- Never trust query params, body, or localStorage without validation
+
+## ShareParams
+- mode, n, month, year, start, end, challengeStart, challengeLength, basePence, firstDayOffset
+- Use `safeParseShareParams()` for URL; `parseShareParams()` when strict
+
+## SavedState API
+- savedStateSchema: { name?, state: ShareParams }
+- Max 10 states per user, name max 100 chars

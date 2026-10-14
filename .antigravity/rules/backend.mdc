@@ -1,0 +1,25 @@
+---
+description: API routes and server-side logic
+globs: "app/api/**/*"
+alwaysApply: false
+---
+
+# Backend Conventions
+
+## API Routes
+- Validate all input with Zod
+- Check auth via `auth()` from `@/auth`
+- Rate limit save/saved routes via `@/lib/rate-limit`
+- Return JSON with proper status codes
+
+## Errors
+- 400: validation failure
+- 401: unauthenticated
+- 404: not found
+- 429: rate limited
+- 500: never expose internals; log server-side only
+
+## Security
+- Never log sensitive data (tokens, emails)
+- Use Prisma for DB; no raw SQL
+- Scope all queries by session.user.id
