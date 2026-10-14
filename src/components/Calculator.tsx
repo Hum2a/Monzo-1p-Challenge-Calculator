@@ -9,9 +9,12 @@ import {
   computeCustomRange,
   computeRange,
   formatPenceAsGBP,
+  annualTotalPence,
+  MULTIPLIER_OPTIONS,
   type ChallengeConfig,
   type RangeResult,
 } from "@/lib/pennyChallenge";
+import { cn } from "@/lib/utils";
 import { safeParseShareParams, type ShareParams } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -165,7 +168,7 @@ export function Calculator() {
       basePence,
       firstDayOffset: effectiveDayOffset ?? undefined,
     }),
-    [mode, n, fromDate, month, year, customStart, customEnd, challengeStart, challengeLength, basePence, effectiveDayOffset]
+    [mode, n, fromDate, month, year, customStart, customEnd, challengeStart, challengeLength, basePence, effectiveDayOffset, firstDayOffset]
   );
 
   React.useEffect(() => {
@@ -233,7 +236,7 @@ export function Calculator() {
 
   const copyText = result
     ? [
-        `1p Challenge: ${result.dayCount} days`,
+        `1p Challenge${basePence > 1 ? ` (${basePence}p/day · ${basePence}x scale)` : ""}: ${result.dayCount} days`,
         `First day: ${showPenceOnly ? `${result.firstDayPence}p` : formatPenceAsGBP(result.firstDayPence)}`,
         `Last day: ${showPenceOnly ? `${result.lastDayPence}p` : formatPenceAsGBP(result.lastDayPence)}`,
         `Total: ${showPenceOnly ? `${result.totalPence}p` : formatPenceAsGBP(result.totalPence)}`,
@@ -252,11 +255,13 @@ export function Calculator() {
   };
 
   const interpretation = result ? getInterpretation(mode, result, {
-    n, fromDate, month, year, customStart, customEnd, showPenceOnly, firstDayOffset: effectiveDayOffset,
+    n, fromDate, month, year, customStart, customEnd, showPenceOnly, firstDayOffset: effectiveDayOffset, basePence,
   }) : null;
 
   const formulaExplanation = result
-    ? `Sum from day ${result.firstDay} to ${result.lastDay} = (${result.lastDay}×${result.lastDay + 1} − ${result.firstDay - 1}×${result.firstDay}) / 2 = ${result.totalPence} pence`
+    ? basePence > 1
+      ? `Sum from day ${result.firstDay} to ${result.lastDay} = [(${result.lastDay}×${result.lastDay + 1} − ${result.firstDay - 1}×${result.firstDay}) / 2] × ${basePence}p = ${result.totalPence} pence (${formatPenceAsGBP(result.totalPence)})`
+      : `Sum from day ${result.firstDay} to ${result.lastDay} = (${result.lastDay}×${result.lastDay + 1} − ${result.firstDay - 1}×${result.firstDay}) / 2 = ${result.totalPence} pence`
     : null;
 
   return (
@@ -270,8 +275,13 @@ export function Calculator() {
       </CardHeader>
       <CardContent className="space-y-4 relative z-10">
         {/* Challenge config - collapsible or inline */}
-        <div className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 transition-colors duration-200">
-          <p className="text-sm font-medium text-foreground">Challenge settings</p>
+        <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-3.5 transition-colors duration-200">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-foreground">Challenge settings</p>
+            <span className="text-xs font-semibold text-primary tracking-wide bg-primary/10 px-2 py-0.5 rounded-full">
+              {basePence}x scale · +{basePence}p/day
+            </span>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block text-sm">
               <span className="sr-only">Start date</span>
@@ -290,10 +300,63 @@ export function Calculator() {
                 onChange={(e) => setChallengeLength(Number(e.target.value))}
                 aria-label="Challenge length in days"
               >
-                <option value={364}>364 days</option>
-                <option value={365}>365 days</option>
+                <option value={364}>
+                  364 days ({formatPenceAsGBP(annualTotalPence(364, basePence))})
+                </option>
+                <option value={365}>
+                  365 days ({formatPenceAsGBP(annualTotalPence(365, basePence))})
+                </option>
               </select>
             </label>
+          </div>
+
+          {/* Daily scale multiplier selector */}
+          <div className="pt-1 border-t border-border/60">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Daily scaling rate (Monzo Extra / Perks / Max)
+              </span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                Day 1: {formatPenceAsGBP(basePence)} · Day {challengeLength}: {formatPenceAsGBP(challengeLength * basePence)}
+              </span>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Daily scaling rate multiplier"
+              className="grid grid-cols-4 gap-2"
+            >
+              {MULTIPLIER_OPTIONS.map((opt) => {
+                const isSelected = basePence === opt.basePence;
+                return (
+                  <button
+                    key={opt.multiplier}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    id={`scale-option-${opt.multiplier}`}
+                    onClick={() => setBasePence(opt.basePence)}
+                    className={cn(
+                      "flex flex-col items-center justify-center py-2 px-1 rounded-lg text-xs transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      isSelected
+                        ? "bg-primary text-primary-foreground font-semibold shadow-sm shadow-primary/25 ring-1 ring-primary"
+                        : "bg-background/90 text-foreground border border-input hover:bg-muted/80"
+                    )}
+                  >
+                    <span className="text-sm font-bold tracking-tight">
+                      {opt.label}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] tracking-tight",
+                        isSelected ? "text-primary-foreground/90 font-medium" : "text-muted-foreground"
+                      )}
+                    >
+                      {opt.tierName}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -515,9 +578,11 @@ export function Calculator() {
             <AccordionItem value="formula">
               <AccordionTrigger>How is this calculated?</AccordionTrigger>
               <AccordionContent>
-                <p className="text-sm">{formulaExplanation}</p>
+                <p className="text-sm font-mono text-muted-foreground">{formulaExplanation}</p>
                 <p className="text-sm mt-2">
-                  The penny challenge uses an arithmetic series: day k = k pence. The sum from day a to day b is (b×(b+1) − (a−1)×a) ÷ 2 pence.
+                  {basePence > 1
+                    ? `At a ${basePence}x scale (+${basePence}p more each day), day k = ${basePence}×k pence (Day 1 = ${formatPenceAsGBP(basePence)}, Day 2 = ${formatPenceAsGBP(basePence * 2)}, etc.). The standard arithmetic series sum is scaled by ${basePence}p.`
+                    : "The penny challenge uses an arithmetic series: day k = k pence (+1p each day). The sum from day a to day b is (b×(b+1) − (a−1)×a) ÷ 2 pence."}
                 </p>
               </AccordionContent>
             </AccordionItem>
@@ -594,21 +659,23 @@ function getInterpretation(
     customEnd?: string;
     showPenceOnly?: boolean;
     firstDayOffset?: number | null;
+    basePence?: number;
   }
 ): string {
   const fmt = (p: number) => opts.showPenceOnly ? `${p}p` : formatPenceAsGBP(p);
+  const scaleSuffix = opts.basePence && opts.basePence > 1 ? ` (at ${opts.basePence}p/day)` : "";
   if (mode === "month" && opts.month != null && opts.year != null) {
     const monthName = format(new Date(opts.year, opts.month - 1), "MMMM yyyy");
-    return `For ${monthName} (days ${r.firstDay}–${r.lastDay}), you'll deposit ${fmt(r.totalPence)}.`;
+    return `For ${monthName} (days ${r.firstDay}–${r.lastDay}), you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;
   }
   if (mode === "next-n") {
     if (opts.firstDayOffset != null) {
-      return `For the next ${opts.n} days starting from day ${opts.firstDayOffset}, you'll deposit ${fmt(r.totalPence)}.`;
+      return `For the next ${opts.n} days starting from day ${opts.firstDayOffset}, you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;
     }
-    return `For the next ${opts.n} days starting ${opts.fromDate}, you'll deposit ${fmt(r.totalPence)}.`;
+    return `For the next ${opts.n} days starting ${opts.fromDate}, you'll deposit ${fmt(r.totalPence)}${scaleSuffix}.`;
   }
   if (mode === "custom" && opts.customStart && opts.customEnd) {
-    return `From ${opts.customStart} to ${opts.customEnd} (${r.dayCount} days): ${fmt(r.totalPence)}.`;
+    return `From ${opts.customStart} to ${opts.customEnd} (${r.dayCount} days): ${fmt(r.totalPence)}${scaleSuffix}.`;
   }
-  return `Total for ${r.dayCount} days: ${fmt(r.totalPence)}.`;
+  return `Total for ${r.dayCount} days: ${fmt(r.totalPence)}${scaleSuffix}.`;
 }

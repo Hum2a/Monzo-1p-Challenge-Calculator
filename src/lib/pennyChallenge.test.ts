@@ -9,6 +9,8 @@ import {
   computeCustomRange,
   totalSavedUpTo,
   formatPenceAsGBP,
+  annualTotalPence,
+  MULTIPLIER_OPTIONS,
   type ChallengeConfig,
 } from "./pennyChallenge";
 
@@ -164,3 +166,72 @@ describe("formatPenceAsGBP", () => {
   it("1 -> £0.01", () => expect(formatPenceAsGBP(1)).toBe("£0.01"));
   it("100 -> £1.00", () => expect(formatPenceAsGBP(100)).toBe("£1.00"));
 });
+
+describe("scaling multipliers (up to 4p/day)", () => {
+  it("annual totals for 365 days match Monzo figures", () => {
+    // 1x = £667.95
+    expect(annualTotalPence(365, 1)).toBe(66795);
+    expect(formatPenceAsGBP(annualTotalPence(365, 1))).toBe("£667.95");
+
+    // 2x = £1,335.90
+    expect(annualTotalPence(365, 2)).toBe(133590);
+    expect(formatPenceAsGBP(annualTotalPence(365, 2))).toBe("£1335.90");
+
+    // 3x = £2,003.85
+    expect(annualTotalPence(365, 3)).toBe(200385);
+    expect(formatPenceAsGBP(annualTotalPence(365, 3))).toBe("£2003.85");
+
+    // 4x = £2,671.80
+    expect(annualTotalPence(365, 4)).toBe(267180);
+    expect(formatPenceAsGBP(annualTotalPence(365, 4))).toBe("£2671.80");
+  });
+
+  it("annual totals for 364 days match arithmetic scaling", () => {
+    expect(annualTotalPence(364, 1)).toBe(66430);
+    expect(formatPenceAsGBP(annualTotalPence(364, 1))).toBe("£664.30");
+
+    expect(annualTotalPence(364, 2)).toBe(132860);
+    expect(formatPenceAsGBP(annualTotalPence(364, 2))).toBe("£1328.60");
+
+    expect(annualTotalPence(364, 3)).toBe(199290);
+    expect(formatPenceAsGBP(annualTotalPence(364, 3))).toBe("£1992.90");
+
+    expect(annualTotalPence(364, 4)).toBe(265720);
+    expect(formatPenceAsGBP(annualTotalPence(364, 4))).toBe("£2657.20");
+  });
+
+  it("computes monthly totals at 4x scaling", () => {
+    const config4x: ChallengeConfig = {
+      startDate: new Date(2026, 0, 1),
+      challengeLengthDays: 365,
+      basePence: 4,
+    };
+    // January days 1-31 at 1x is 496p. At 4x it must be 496 * 4 = 1984p (£19.84)
+    const jan = computeForMonth(1, 2026, config4x);
+    expect(jan).not.toBeNull();
+    expect(jan!.firstDayPence).toBe(4); // Day 1 is 4p
+    expect(jan!.lastDayPence).toBe(124); // Day 31 is 31 * 4 = 124p
+    expect(jan!.totalPence).toBe(496 * 4);
+    expect(formatPenceAsGBP(jan!.totalPence)).toBe("£19.84");
+  });
+
+  it("computes next N days at 2x scaling", () => {
+    const config2x: ChallengeConfig = {
+      startDate: new Date(2026, 0, 1),
+      challengeLengthDays: 365,
+      basePence: 2,
+    };
+    const r = computeNextNDays(new Date(2026, 0, 1), 10, config2x);
+    expect(r).not.toBeNull();
+    expect(r!.firstDayPence).toBe(2);
+    expect(r!.lastDayPence).toBe(20);
+    expect(r!.totalPence).toBe(55 * 2); // 1..10 is 55, at 2x = 110p
+  });
+
+  it("MULTIPLIER_OPTIONS contains 1x, 2x, 3x, 4x tiers", () => {
+    expect(MULTIPLIER_OPTIONS).toHaveLength(4);
+    expect(MULTIPLIER_OPTIONS.map((o) => o.multiplier)).toEqual([1, 2, 3, 4]);
+    expect(MULTIPLIER_OPTIONS.map((o) => o.basePence)).toEqual([1, 2, 3, 4]);
+  });
+});
+

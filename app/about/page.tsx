@@ -40,10 +40,29 @@ export default function AboutPage() {
               364 = 66,430 pence (£664.30). A 365-day version saves £667.95.
             </p>
             <p>
+              <strong className="text-foreground">Scaling up to 4p more each day:</strong>{" "}
+              Monzo now lets customers on paid tiers (such as Monzo Extra, Perks, and Max)
+              scale their challenge with multipliers up to 4x (+4p/day):
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <strong>1x (Standard · +1p/day):</strong> Day 1 = 1p, Day 365 = £3.65 → <strong>£667.95</strong> total
+              </li>
+              <li>
+                <strong>2x (Double · +2p/day):</strong> Day 1 = 2p, Day 365 = £7.30 → <strong>£1,335.90</strong> total
+              </li>
+              <li>
+                <strong>3x (Triple · +3p/day):</strong> Day 1 = 3p, Day 365 = £10.95 → <strong>£2,003.85</strong> total
+              </li>
+              <li>
+                <strong>4x (Monzo Max · +4p/day):</strong> Day 1 = 4p, Day 365 = £14.60 → <strong>£2,671.80</strong> total
+              </li>
+            </ul>
+            <p>
               <strong className="text-foreground">Flexibility:</strong> Many
               people adapt the challenge to fit their schedule. You can start on
-              any date, choose 364 or 365 days, and use this calculator to plan
-              how much to deposit for a specific month or date range.
+              any date, choose 364 or 365 days, select your preferred daily scale (1x–4x),
+              and use this calculator to plan how much to deposit for a specific month or date range.
             </p>
             <p>
               This calculator helps you figure out exactly how much to put aside

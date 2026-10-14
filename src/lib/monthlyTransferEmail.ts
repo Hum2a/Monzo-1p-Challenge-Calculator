@@ -108,23 +108,28 @@ export function buildMonthlyTransferEmail(opts: {
   month: number;
   year: number;
   result: RangeResult;
+  basePence?: number;
 }): MonthlyEmailPayload {
-  const { email, month, year, result } = opts;
+  const { email, month, year, result, basePence } = opts;
   const monthLabel = format(new Date(year, month - 1, 1), "MMMM yyyy");
   const amount = formatPenceAsGBP(result.totalPence);
-  const subject = `1p Challenge: transfer ${amount} for ${monthLabel}`;
+  const scaleSuffix = basePence && basePence > 1 ? ` (${basePence}x scale)` : "";
+  const subject = `1p Challenge${scaleSuffix}: transfer ${amount} for ${monthLabel}`;
   const text = [
     `Hi,`,
     ``,
-    `For ${monthLabel}, transfer ${amount} into your Monzo pot for the 1p challenge.`,
+    `For ${monthLabel}, transfer ${amount} into your Monzo pot for the 1p challenge${scaleSuffix}.`,
     ``,
     `Days ${result.firstDay}–${result.lastDay} (${result.dayCount} days).`,
     `First day: ${formatPenceAsGBP(result.firstDayPence)} · Last day: ${formatPenceAsGBP(result.lastDayPence)}.`,
+    basePence && basePence > 1 ? `Scale: +${basePence}p/day (${basePence}x multiplier).` : null,
     ``,
     `— 1p Challenge Calculator`,
-  ].join("\n");
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
 
-  const html = buildMonthlyTransferEmailHtml({ monthLabel, result });
+  const html = buildMonthlyTransferEmailHtml({ monthLabel, result, basePence });
 
   return {
     to: email,
@@ -229,6 +234,7 @@ export async function runMonthlyTransferEmails(
       month,
       year,
       result,
+      basePence: config.basePence,
     });
 
     const sendResult = await sendResendEmail(payload);

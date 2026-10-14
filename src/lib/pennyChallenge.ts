@@ -35,6 +35,29 @@ export function sumRangeInPence(
   return sumToN(lastDay) - sumToN(firstDay - 1);
 }
 
+export interface MultiplierOption {
+  multiplier: number;
+  basePence: number;
+  label: string;
+  tierName: string;
+  description: string;
+}
+
+export const MULTIPLIER_OPTIONS: readonly MultiplierOption[] = [
+  { multiplier: 1, basePence: 1, label: "1p (1x)", tierName: "Standard", description: "+1p/day" },
+  { multiplier: 2, basePence: 2, label: "2p (2x)", tierName: "Double", description: "+2p/day" },
+  { multiplier: 3, basePence: 3, label: "3p (3x)", tierName: "Triple", description: "+3p/day" },
+  { multiplier: 4, basePence: 4, label: "4p (4x)", tierName: "Max", description: "+4p/day" },
+] as const;
+
+/** Total pence for a full challenge year (364 or 365 days) at a given base pence. */
+export function annualTotalPence(
+  lengthDays: number = 365,
+  basePence: number = 1
+): number {
+  return Math.floor((lengthDays * (lengthDays + 1)) / 2) * basePence;
+}
+
 export interface ChallengeConfig {
   startDate: Date;
   challengeLengthDays: number; // 364 or 365

@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- (Add new changes here)
+### Added
+
+- **Daily scaling multipliers (up to 4p/day)**: Added support for Monzo's scaling options (1x, 2x, 3x, 4x tiers), allowing users to scale daily savings up to 4p more each day (£2,671.80 for 365 days / £2,657.20 for 364 days).
+- **Interactive multiplier selector**: Added accessible 4-pill selector (`1p (1x)`, `2p (2x)`, `3p (3x)`, `4p (4x)`) in Challenge Settings with dynamic Day 1, Day 365, and annual total previews.
+- **Dynamic challenge length totals**: Challenge length selector dynamically calculates and shows annual targets for the chosen scale tier (e.g. `365 days (£2,671.80)`).
+- **Scaled monthly email notifications**: Included multiplier/scale badges and text in monthly transfer reminder emails.
+- **Unit test suite expansion**: Added comprehensive test coverage for 1x through 4x multiplier arithmetic, annual totals, and email templates.
+
+### Fixed
+
+- **Arithmetic series formula display**: Corrected the formula explanation accordion when scaling multipliers are active to accurately show the `× basePence` step.
+
 
 ## [v0.1.1] - 2026-02-27
 

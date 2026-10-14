@@ -94,10 +94,18 @@ npm run cron:trigger -- https://monzo-1p-challenge-calculator.online
 
 ## How the Math Works
 
-- **Day 1** = 1p, **Day k** = k pence  
-- **Sum days a to b:** (b(b+1) − (a−1)a) / 2 pence  
-- **364 days:** £664.30 | **365 days:** £667.95  
-- Integer pence only—no floats
+- **Day 1** = 1p (or $M$ pence at $M\times$ scale), **Day k** = $k \times M$ pence  
+- **Sum days a to b:** $[(b(b+1) − (a−1)a) / 2] \times M$ pence  
+- **Integer pence only**—no floats
+
+### Scaling Multipliers (Monzo Extra / Perks / Max)
+
+| Multiplier | Daily Increment | Day 1 | Day 365 | 365 Days | 364 Days |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1x (Standard)** | +1p / day | 1p | £3.65 | **£667.95** | **£664.30** |
+| **2x (Double)** | +2p / day | 2p | £7.30 | **£1,335.90** | **£1,328.60** |
+| **3x (Triple)** | +3p / day | 3p | £10.95 | **£2,003.85** | **£1,992.90** |
+| **4x (Monzo Max)** | +4p / day | 4p | £14.60 | **£2,671.80** | **£2,657.20** |
 
 ## Deployment (Cloudflare)
 

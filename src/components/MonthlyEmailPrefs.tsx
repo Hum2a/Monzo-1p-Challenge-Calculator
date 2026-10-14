@@ -127,7 +127,7 @@ export function MonthlyEmailPrefs({
   };
 
   const previewLabel = preview
-    ? `On 1 ${format(new Date(preview.year, preview.month - 1, 1), "MMMM yyyy")}, transfer ${formatPenceAsGBP(preview.result.totalPence)} (days ${preview.result.firstDay}–${preview.result.lastDay}).`
+    ? `On 1 ${format(new Date(preview.year, preview.month - 1, 1), "MMMM yyyy")}, transfer ${formatPenceAsGBP(preview.result.totalPence)} (days ${preview.result.firstDay}–${preview.result.lastDay}${basePence > 1 ? ` at ${basePence}p/day` : ""}).`
     : "That month sits outside your challenge period — adjust the start date above.";
 
   return (
@@ -138,7 +138,7 @@ export function MonthlyEmailPrefs({
 
       {savedEnabled && savedStart && (
         <p className="text-xs text-muted-foreground">
-          On for start {savedStart}. Saving again updates the reminder to the
+          Active for start {savedStart} ({basePence}x scale · +{basePence}p/day). Saving again updates the reminder to the
           challenge settings above.
         </p>
       )}

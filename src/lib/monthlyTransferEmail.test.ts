@@ -75,6 +75,29 @@ describe("buildMonthlyTransferEmail", () => {
     expect(email.html).toContain("#FE4B60");
     expect(email.html).toContain("Open calculator");
   });
+
+  it("includes scale information when basePence > 1", () => {
+    const config = resolveChallengeConfig(
+      { challengeStart: "2026-01-01", challengeLength: 365, basePence: 4 },
+      2026
+    );
+    const result = computeForMonth(1, 2026, config);
+    expect(result).not.toBeNull();
+    const email = buildMonthlyTransferEmail({
+      email: "user@example.com",
+      month: 1,
+      year: 2026,
+      result: result!,
+      basePence: 4,
+    });
+    expect(email.totalPence).toBe(1984);
+    expect(email.subject).toContain("4x scale");
+    expect(email.subject).toContain("£19.84");
+    expect(email.text).toContain("4x scale");
+    expect(email.text).toContain("+4p/day");
+    expect(email.html).toContain("4x Scale (+4p/day)");
+    expect(email.html).toContain("£19.84");
+  });
 });
 
 describe("isMonthlyEmailEligible", () => {

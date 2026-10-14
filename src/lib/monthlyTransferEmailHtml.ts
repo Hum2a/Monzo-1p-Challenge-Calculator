@@ -18,6 +18,7 @@ type HtmlOpts = {
   monthLabel: string;
   result: RangeResult;
   siteUrl?: string;
+  basePence?: number;
 };
 
 /**
@@ -25,14 +26,15 @@ type HtmlOpts = {
  * Images are absolute URLs to files in /public.
  */
 export function buildMonthlyTransferEmailHtml(opts: HtmlOpts): string {
-  const { monthLabel, result } = opts;
+  const { monthLabel, result, basePence } = opts;
   const site = (opts.siteUrl ?? publicSiteUrl()).replace(/\/$/, "");
   const amount = formatPenceAsGBP(result.totalPence);
   const first = formatPenceAsGBP(result.firstDayPence);
   const last = formatPenceAsGBP(result.lastDayPence);
   const emblem = `${site}/Monzo-Emblem-Light.png`;
   const wordmark = `${site}/Monzo_logo.png`;
-  const preheader = `Transfer ${amount} into your Monzo pot for ${monthLabel}. Days ${result.firstDay}–${result.lastDay}.`;
+  const scaleNote = basePence && basePence > 1 ? ` (${basePence}x scale)` : "";
+  const preheader = `Transfer ${amount} into your Monzo pot for ${monthLabel}${scaleNote}. Days ${result.firstDay}–${result.lastDay}.`;
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -96,7 +98,7 @@ export function buildMonthlyTransferEmailHtml(opts: HtmlOpts): string {
                 <tr>
                   <td style="background-color:${NAVY};background-image:linear-gradient(160deg,#001E3A 0%,#003058 55%,#007A8B 140%);padding:28px 32px 24px 32px;" class="px">
                     <p style="margin:0 0 6px 0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${CORAL};">
-                      1p Challenge
+                      1p Challenge${basePence && basePence > 1 ? ` · ${basePence}x Scale (+${basePence}p/day)` : ""}
                     </p>
                     <h1 style="margin:0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:22px;line-height:28px;font-weight:800;color:#ffffff;">
                       Time to top up your pot
@@ -118,7 +120,7 @@ export function buildMonthlyTransferEmailHtml(opts: HtmlOpts): string {
                       ${amount}
                     </p>
                     <p class="text-body" style="margin:10px 0 0 0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:15px;color:${NAVY};">
-                      into your Monzo pot
+                      into your Monzo pot${basePence && basePence > 1 ? ` (${basePence}x scale · +${basePence}p/day)` : ""}
                     </p>
                   </td>
                 </tr>
